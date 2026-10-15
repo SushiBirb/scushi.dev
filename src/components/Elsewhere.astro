@@ -1,0 +1,78 @@
+---
+import { Check, Copy } from 'lucide-astro';
+
+interface Props {
+  email?: string;
+  github?: string;
+}
+
+const {
+  email = "josh@scushi.dev",
+  github = "https://github.com/SushiBirb"
+} = Astro.props;
+---
+
+<section id="elsewhere" class="mt-14 pt-10 pb-16 border-t border-neutral-800/80 animate-fade-in-up">
+  <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
+    <span class="text-accent accent-glow mr-2">*</span> elsewhere
+  </h2>
+
+  <div class="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+    <!-- Interactive Copy Email Button -->
+    <button
+      id="copy-email-btn"
+      data-email={email}
+      class="group inline-flex items-center gap-1.5 text-neutral-400 hover:text-accent transition-colors duration-200 cursor-pointer font-mono"
+    >
+      <span>email</span>
+      <span id="copy-tooltip" class="text-[11px] text-accent opacity-0 transition-opacity duration-200">
+        [copied!]
+      </span>
+    </button>
+
+    <a
+      href={github}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-neutral-400 hover:text-accent transition-colors duration-200"
+    >
+      github
+    </a>
+
+    <a
+      href="https://github.com/SushiBirb/HyprWpE"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-neutral-400 hover:text-accent transition-colors duration-200"
+    >
+      dotfiles
+    </a>
+
+    <a
+      href="https://scushi.dev"
+      class="text-neutral-400 hover:text-accent transition-colors duration-200"
+    >
+      scushi.dev
+    </a>
+  </div>
+</section>
+
+<script>
+  const copyBtn = document.getElementById('copy-email-btn');
+  const tooltip = document.getElementById('copy-tooltip');
+
+  if (copyBtn && tooltip) {
+    copyBtn.addEventListener('click', async () => {
+      const email = copyBtn.dataset.email || 'josh@scushi.dev';
+      try {
+        await navigator.clipboard.writeText(email);
+        tooltip.style.opacity = '1';
+        setTimeout(() => {
+          tooltip.style.opacity = '0';
+        }, 1800);
+      } catch (err) {
+        console.error('Failed to copy email:', err);
+      }
+    });
+  }
+</script>

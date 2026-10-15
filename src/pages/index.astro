@@ -1,16 +1,104 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import ScrambleText from '../components/ScrambleText.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import HomelabNode from '../components/HomelabNode.astro';
+import Elsewhere from '../components/Elsewhere.astro';
+import { ArrowUpRight } from 'lucide-astro';
+
+const projects = [
+  {
+    title: 'HyprWpE',
+    href: 'https://github.com/SushiBirb/HyprWpE',
+    role: 'creator and maintainer',
+    timeline: 'active',
+    badge: 'wayland · shaders',
+    description: 'Wallpaper Engine for the Hyprland compositor on Wayland. Plays video via mpvpaper, renders interactive web with WebKitGTK, and executes 2D/3D scenes through a native WebGL2 GLSL shader transpilation pipeline without Wine/Proton.',
+    tags: ['Wayland', 'Hyprland', 'GTK4', 'WebGL2', 'GLSL', 'Python', 'Rust'],
+  },
+  {
+    title: 'FlyAway',
+    href: 'https://github.com/SushiBirb/FlyAway',
+    role: 'hardened security & edge contributor',
+    timeline: 'enterprise',
+    badge: 'security · hardware',
+    description: 'Attendance verification and automated student early dismissal tracking system. Upgraded with hardened edge security, cryptographic access authorization, C++20/CPR/OpenSSL kiosk clients, and centralized multi-tier management.',
+    tags: ['C++20', 'OpenSSL', 'CPR', 'ASP.NET Core', 'Cryptography', 'Embedded Kiosks'],
+  },
+  {
+    title: 'slaytheland',
+    href: 'https://github.com/SushiBirb/slaytheland',
+    role: 'creator',
+    timeline: 'hyprland shell',
+    badge: 'qml · desktop shell',
+    description: 'A complete Slay the Princess desktop shell for Hyprland written natively in Quickshell (QML). Features living companions watching from screen corners, 12 fps pencil boil shaders, dynamic parallax perspectives, Foley audio, and Ryoku architecture integration.',
+    tags: ['Hyprland', 'Quickshell (QML)', 'GLSL Shaders', 'Arch Linux', 'Ryoku'],
+  },
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout>
+  <Navbar />
+
+  <!-- Hero Section -->
+  <header id="home" class="mb-16 space-y-4">
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-2 animate-fade-in flex items-center gap-2">
+      <ScrambleText text="scushi" as="span" class="text-white hover:text-accent transition-colors duration-200" />
+      <span class="text-accent accent-glow">.dev</span>
+    </h1>
+
+    <p class="text-sm text-neutral-400 animate-fade-in flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-accent accent-glow"></span>
+      systems & software engineer · louisville, ky
+    </p>
+
+    <p class="text-neutral-300 text-pretty max-w-[58ch] leading-relaxed pt-2 animate-fade-in-up text-sm sm:text-base">
+      i love building low-level systems, crafting custom desktop environments on Arch Linux & Hyprland, and self-hosting resilient infrastructure. when i'm not writing code or ricing Wayland shaders, i'm tinkering in my Proxmox homelab or exploring systems security.
+    </p>
+  </header>
+
+  <!-- Projects Section -->
+  <section id="projects" class="mb-16 pt-10 border-t border-neutral-800/80 animate-fade-in-up">
+    <div class="flex items-baseline justify-between mb-6">
+      <h2 class="text-2xl font-semibold flex items-center text-white">
+        <span class="text-accent accent-glow mr-2">*</span> projects
+      </h2>
+
+      <a
+        href="https://github.com/SushiBirb"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 text-xs sm:text-sm text-accent hover:underline group font-mono"
+      >
+        all repositories
+        <ArrowUpRight class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+      </a>
+    </div>
+
+    <div class="space-y-4">
+      {projects.map((project) => (
+        <ProjectCard {...project} />
+      ))}
+    </div>
+  </section>
+
+  <!-- Systems & Homelab Section -->
+  <section id="systems" class="mb-16 pt-10 border-t border-neutral-800/80 animate-fade-in-up">
+    <div class="flex items-baseline justify-between mb-2">
+      <h2 class="text-2xl font-semibold flex items-center text-white">
+        <span class="text-accent accent-glow mr-2">*</span> systems & infrastructure
+      </h2>
+      <span class="text-xs text-neutral-400 font-mono hidden sm:inline">192.168.0.0/22</span>
+    </div>
+
+    <p class="text-xs text-neutral-400 mb-6 leading-relaxed">
+      scushi.dev is built with zero-overhead static generation to preserve compute for private homelab clusters, zero-trust network tunnels, and hypervisor virtualization.
+    </p>
+
+    <HomelabNode />
+  </section>
+
+  <!-- Elsewhere Footer -->
+  <Elsewhere />
+</Layout>

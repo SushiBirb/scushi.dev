@@ -1,0 +1,60 @@
+---
+import { ArrowUpRight } from 'lucide-astro';
+
+interface Props {
+  title: string;
+  href: string;
+  role: string;
+  timeline?: string;
+  description: string;
+  tags?: string[];
+  badge?: string;
+}
+
+const { title, href, role, timeline, description, tags = [], badge } = Astro.props;
+---
+
+<a
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="group block rounded-xl p-4 -mx-4 hover:bg-neutral-900/60 border border-transparent hover:border-neutral-800/80 transition-all duration-200"
+>
+  <div class="flex items-start justify-between gap-4">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h3 class="text-xl font-semibold text-white group-hover:text-accent transition-colors duration-200">
+          {title}
+        </h3>
+        {badge && (
+          <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-accent accent-glow-subtle">
+            {badge}
+          </span>
+        )}
+      </div>
+
+      <p class="text-xs text-neutral-400 mt-1">
+        {role}
+        {timeline && <span class="text-neutral-600"> · {timeline}</span>}
+      </p>
+
+      <p class="text-neutral-300 text-sm mt-2.5 leading-relaxed text-pretty">
+        {description}
+      </p>
+
+      {tags.length > 0 && (
+        <div class="flex flex-wrap gap-1.5 mt-3.5">
+          {tags.map((tag) => (
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-neutral-950/70 border border-neutral-800/80 text-neutral-400 group-hover:border-accent/20 group-hover:text-neutral-300 transition-colors">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <ArrowUpRight
+      class="w-5 h-5 mt-1 text-neutral-500 group-hover:text-accent transition-all duration-200 group-hover:translate-x-1 group-hover:-translate-y-1 shrink-0"
+    />
+  </div>
+</a>

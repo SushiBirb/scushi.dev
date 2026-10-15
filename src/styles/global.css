@@ -1,1 +1,108 @@
 @import "tailwindcss";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+@theme {
+  --font-mono: "JetBrains Mono", monospace;
+  --color-accent: #ffade4;
+  --color-accent-light: #ffd7ee;
+  --color-accent-peach: #f5b9a1;
+  --color-accent-muted: #ddbecf;
+  --color-canvas: #0e0e11;
+  --color-surface: #141418;
+  --color-surface-hover: #1c1c22;
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  font-family: var(--font-mono);
+  background-color: var(--color-canvas);
+  color: #e2e2e2;
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: #ffade4;
+  color: #131313;
+}
+
+/* Accent glow filters */
+.accent-glow {
+  filter: drop-shadow(0 0 8px rgba(255, 173, 228, 0.7));
+}
+
+.accent-glow-subtle {
+  filter: drop-shadow(0 0 5px rgba(255, 173, 228, 0.4));
+}
+
+.accent-box-glow {
+  box-shadow: 0 0 25px -5px rgba(255, 173, 228, 0.15);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+/* Minimal Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0e0e11;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffade4;
+}

@@ -1,0 +1,56 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "scushi · systems & software",
+  description = "personal portfolio, homelab architecture, and software engineering projects by scushi."
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://scushi.dev" />
+    <meta name="theme-color" content="#ffade4" />
+  </head>
+  <body class="min-h-screen bg-[var(--color-canvas)] text-neutral-200 font-mono antialiased selection:bg-accent selection:text-neutral-950 relative overflow-x-hidden">
+    <!-- Interactive Background Spotlight Effect (Client-side, 0 server load) -->
+    <div id="pointer-spotlight" class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-700"></div>
+
+    <div class="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-16">
+      <slot />
+    </div>
+
+    <script>
+      // Subtle cursor spotlight that follows mouse movement
+      const spotlight = document.getElementById('pointer-spotlight');
+      if (spotlight && window.matchMedia('(pointer: fine)').matches) {
+        window.addEventListener('mousemove', (e) => {
+          spotlight.style.opacity = '1';
+          spotlight.style.background = `radial-gradient(650px circle at ${e.clientX}px ${e.clientY}px, rgba(255, 173, 228, 0.05), transparent 80%)`;
+        });
+        window.addEventListener('mouseleave', () => {
+          spotlight.style.opacity = '0';
+        });
+      }
+    </script>
+  </body>
+</html>
