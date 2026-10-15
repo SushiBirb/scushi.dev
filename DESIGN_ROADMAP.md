@@ -5,25 +5,30 @@
 - **Styling:** Tailwind CSS v4, `@fontsource/jetbrains-mono`
 - **Colorway:** Deep Obsidian Canvas (`#0e0e11`), Accent Pink (`#ffade4`), Light Container Pink (`#ffd7ee`)
 - **Key Navigation:** `[h] home` (`/`), `[p] projects` (`/projects`), `[s] systems` (`/systems`) with keyboard listeners
-- **Margin Atmosphere:** Progressive scroll-reactive botanical vines (`GrowingVines.astro`) inspired by the woods of *Slay the Princess* (`slaytheland`)
-- **Systems & Hardening:** Obfuscated production homelab telemetry showcasing AdGuard Home, CrowdSec IPS v1.8.1, Maltrail IDS, ntopng L2–L7 DPI, and Tailscale mesh
+- **Active Background:** Procedural ASCII Descent (`AsciiDescent.astro`) — a 3-tier parallax text canvas transitioning from celestial starfields to infrastructural matrix gates to the infernal subterranean abyss.
+  - Features center-masking (dimmed to `~0.03 - 0.05` behind body text, atmospheric in margins).
+- **Systems & Hardening:** Obfuscated production homelab telemetry showcasing AdGuard Home, CrowdSec IPS v1.8.1, Maltrail IDS, ntopng L2–L7 DPI, and Tailscale mesh.
 
 ---
 
-## Planned Experiment: The Monospace ASCII Descent (Heaven to Hell)
+## Retired Experiments
+- **Progressive Botanical Vines (`GrowingVines.astro`):**
+  - *Evaluation:* The page content is intentionally concise and fast-reading, meaning the scroll distance is too short for a botanical growth animation to unfurl smoothly. The component remains preserved in the repo for potential future long-form essays/docs.
+
+---
+
+## Next Planned Experiment: Interactive Cursor Vector Field
 
 ### Concept Overview
-A multi-tier procedural ASCII parallax background tracking the user's scroll depth:
-1. **Tier 1: Celestial / The Heavens (`/` - Hero)**
-   - Starfields, ethereal clouds, floating constellation lines (`*`, `·`, `°`, `~`, `+`, `^`)
-   - Airy, tranquil, faint opacity (`~0.08 - 0.12`)
-2. **Tier 2: The Circuit & Infrastructure (Mid-Scroll - `/projects` & `/systems`)**
-   - Architectural logic gates, network brackets, server bus traces (`[ ]`, `|`, `/ \`, `#`, `_`, `=`, `0101`)
-   - High density, structured technical alignment
-3. **Tier 3: The Cavern / Infernal Descent (Bottom - `#elsewhere` / Footer)**
-   - Subterranean roots, downward-pointing stalactites, drifting embers (`v`, `v`, `.`, `,`, `;`, `:`, `%`)
-   - Dramatic shift in glyph cadence
-
-### Implementation Guidelines
-- **Contrast & Legibility:** Must remain masked behind a linear/radial CSS gradient mask so body text readability is never compromised.
-- **Client Execution:** Implemented via fixed `<pre>` layers or a 2D Canvas text loop using `requestAnimationFrame`, zero server runtime.
+A mathematical / physics-inspired directional vector field background:
+1. **The Grid:**
+   - A regular 2D matrix of small directional elements (minimal needles, line segments `-`, subtle arrows `→`, or directional glyphs).
+2. **The Vector Math:**
+   - Each point $(x, y)$ calculates its angle to the visitor's cursor:
+     $$\theta(x, y) = \text{atan2}(y_{\text{mouse}} - y, x_{\text{mouse}} - x)$$
+   - The elements smoothly rotate toward the cursor with a slight inertia/spring effect.
+3. **Distance Attenuation & Wave Effect:**
+   - Elements closer to the mouse have slightly stronger brightness/length, fading off into resting orientation in distant corners.
+   - Mouse movement could trigger a subtle ripple/wave propagating outward across the field.
+4. **Performance:**
+   - 100% Canvas 2D or WebGL running on client GPU via `requestAnimationFrame`. Zero server overhead.
