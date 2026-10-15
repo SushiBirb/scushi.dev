@@ -1,55 +1,66 @@
 ---
-import { Terminal } from 'lucide-astro';
+interface Props {
+  current?: 'home' | 'projects' | 'systems';
+}
+
+const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isHome = pathname === '/';
+const isProjects = pathname === '/projects';
+const isSystems = pathname === '/systems';
 ---
 
 <nav class="flex items-center justify-between mb-16 text-sm">
   <div class="flex items-center space-x-1 sm:space-x-4">
-    <a href="#home" class="nav-link py-1.5 px-2 sm:px-0 text-neutral-400 hover:text-accent transition-colors duration-200">
+    <a
+      href="/"
+      id="nav-home"
+      class={`py-1.5 px-2 sm:px-0 transition-colors duration-200 ${
+        isHome ? 'text-accent font-semibold' : 'text-neutral-400 hover:text-accent'
+      }`}
+    >
       <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">h</span>] </span>home
     </a>
-    <a href="#projects" class="nav-link py-1.5 px-2 sm:px-0 text-neutral-400 hover:text-accent transition-colors duration-200">
+
+    <a
+      href="/projects"
+      class={`py-1.5 px-2 sm:px-0 transition-colors duration-200 ${
+        isProjects ? 'text-accent font-semibold' : 'text-neutral-400 hover:text-accent'
+      }`}
+    >
       <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">p</span>] </span>projects
     </a>
-    <a href="#systems" class="nav-link py-1.5 px-2 sm:px-0 text-neutral-400 hover:text-accent transition-colors duration-200">
+
+    <a
+      href="/systems"
+      class={`py-1.5 px-2 sm:px-0 transition-colors duration-200 ${
+        isSystems ? 'text-accent font-semibold' : 'text-neutral-400 hover:text-accent'
+      }`}
+    >
       <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">s</span>] </span>systems
-    </a>
-    <a href="#elsewhere" class="nav-link py-1.5 px-2 sm:px-0 text-neutral-400 hover:text-accent transition-colors duration-200">
-      <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">e</span>] </span>elsewhere
     </a>
   </div>
 
-  <div class="hidden sm:flex items-center gap-2 text-xs text-neutral-400 bg-neutral-900/60 border border-neutral-800/80 px-2.5 py-1 rounded-full">
+  <div class="flex items-center gap-2 text-xs text-neutral-400 bg-neutral-900/60 border border-neutral-800/80 px-2.5 py-1 rounded-full">
     <span class="relative flex h-2 w-2">
       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
       <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
     </span>
     <span class="text-neutral-300">scushi-server</span>
     <span class="text-neutral-600">·</span>
-    <span class="text-neutral-400">online</span>
+    <span class="text-neutral-400">active</span>
   </div>
 </nav>
 
 <script>
-  // Keyboard navigation shortcuts ([h], [p], [s], [e])
-  window.addEventListener('keydown', (e) => {
-    // Ignore keystrokes if the user is typing in an input or textarea
-    if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-
-    const key = e.key.toLowerCase();
-    const map: Record<string, string> = {
-      h: '#home',
-      p: '#projects',
-      s: '#systems',
-      e: '#elsewhere',
-    };
-
-    if (map[key]) {
-      const target = document.querySelector(map[key]);
-      if (target) {
+  // If clicking Home while already on Home, scroll smoothly to the very top
+  const homeLink = document.getElementById('nav-home');
+  if (homeLink) {
+    homeLink.addEventListener('click', (e) => {
+      const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+      if (currentPath === '/') {
         e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    }
-  });
+    });
+  }
 </script>

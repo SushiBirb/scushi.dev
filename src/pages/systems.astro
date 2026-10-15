@@ -1,0 +1,187 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Elsewhere from '../components/Elsewhere.astro';
+import { Shield, Server, Network, Activity, Lock, Cpu, Database, ArrowLeft } from 'lucide-astro';
+
+const securityMetrics = [
+  {
+    title: 'AdGuard Home DNS Sinkhole',
+    category: 'Perimeter Defense & DNS Privacy',
+    stats: [
+      { label: 'Blocked Ratio', value: '24.8%' },
+      { label: 'Filtered Queries (24h)', value: '78,900+' },
+      { label: 'Total Queries (24h)', value: '318,400+' },
+      { label: 'Upstream Protocol', value: 'DNS-over-HTTPS (DoH)' },
+    ],
+    details: 'Authoritative local DHCP & recursive caching DNS engine enforcing the HaGeZi Pro threat blocklist to drop malware, tracking, and telemetry queries at the gateway.',
+    status: 'enforcing',
+  },
+  {
+    title: 'CrowdSec IPS (v1.8.1)',
+    category: 'Intrusion Prevention & Threat Intel',
+    stats: [
+      { label: 'Bouncer Engine', value: 'nftables / iptables' },
+      { label: 'Threat Consortium', value: 'Global Mesh Synced' },
+      { label: 'Remediation', value: 'Automated IP Drop' },
+      { label: 'Inspection Scope', value: 'L4 / L7 Ingress' },
+    ],
+    details: 'Behavioral detection engine analyzing ingress application and transport logs. Automatically synchronizes with the CrowdSec community consensus to preemptively blacklist rogue IP subnets.',
+    status: 'shielded',
+  },
+  {
+    title: 'Maltrail Threat IDS',
+    category: 'C2 Beaconing & Heuristic Detection',
+    stats: [
+      { label: 'Heuristic Engine', value: 'Deep IOC Matching' },
+      { label: 'Beaconing Detection', value: 'Active Real-time' },
+      { label: 'Blacklist Feeds', value: 'Daily Auto-Refresh' },
+      { label: 'Action Policy', value: 'Alert & Blackhole' },
+    ],
+    details: 'Monitors egress traffic for suspicious C2 (command & control) beacons, known malicious domain queries, and anomalous outbound port requests.',
+    status: 'monitoring',
+  },
+  {
+    title: 'ntopng & nDPI Engine',
+    category: 'Layer 2–7 Flow Telemetry',
+    stats: [
+      { label: 'DPI Protocol Lib', value: 'nDPI Deep Analysis' },
+      { label: 'Telemetry Store', value: 'Redis Backend' },
+      { label: 'Flow Visibility', value: 'Full L2–L7 Telemetry' },
+      { label: 'False Alarms', value: '0% Tuning Baseline' },
+    ],
+    details: 'High-speed packet capture and flow telemetry analyzer inspecting bandwidth saturation, protocol compliance, and host behavioral anomalies across the internal network.',
+    status: 'analyzing',
+  },
+];
+
+const infrastructureNodes = [
+  {
+    name: 'Edge Ingress & Reverse Proxy',
+    tech: 'Caddy + Cloudflare Zero-Trust Tunnel',
+    description: 'Public traffic to scushi.dev terminates at Cloudflare edge and tunnels to Caddy without exposing router ports to public WAN.',
+  },
+  {
+    name: 'Mesh VPN Transit Gateway',
+    tech: 'Tailscale (WireGuard Kernel)',
+    description: 'Encrypted overlay mesh providing keyless authentication, isolated split routing, and private node management from any location.',
+  },
+  {
+    name: 'Vault Replication Engine',
+    tech: 'Apache CouchDB 3.5.2',
+    description: 'Zero-latency multi-client database cluster replicating academic and technical vaults across Linux, Windows, and mobile clients.',
+  },
+  {
+    name: 'Hypervisor Virtualization',
+    tech: 'Proxmox VE 8 (Debian)',
+    description: 'Hardware virtualization host running containerized network daemons with isolated privilege boundaries and resource limits.',
+  },
+];
+---
+
+<Layout
+  title="systems & defense architecture · scushi"
+  description="Autonomous network security, intrusion prevention, and homelab telemetry engineered by Joshua Mattingly (scushi)."
+>
+  <Navbar current="systems" />
+
+  <header class="mb-14 space-y-4">
+    <div class="flex items-center gap-2 text-xs font-mono text-accent">
+      <span class="inline-block w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+      <span>scushi-server cluster · production defense</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white animate-fade-in">
+      systems & defense
+    </h1>
+
+    <p class="text-sm text-neutral-400 animate-fade-in">
+      autonomous intrusion defense, flow telemetry, and hardened homelab infrastructure
+    </p>
+
+    <p class="text-neutral-300 text-sm sm:text-base leading-relaxed text-pretty max-w-[62ch] pt-2 animate-fade-in-up">
+      A self-hosted homelab designed with enterprise defense-in-depth principles: zero-trust edge ingress, behavioral intrusion prevention, automated threat blocking, and encrypted internal transit.
+    </p>
+  </header>
+
+  <!-- Network Hardening & Telemetry Section -->
+  <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
+    <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
+      <span class="text-accent mr-2 font-bold select-none">*</span> security & threat telemetry
+    </h2>
+
+    <div class="space-y-6">
+      {securityMetrics.map((card) => (
+        <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/30 p-5 hover:border-neutral-700/80 transition-colors">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="text-lg font-semibold text-white">{card.title}</h3>
+              <p class="text-xs text-neutral-400">{card.category}</p>
+            </div>
+            <span class="self-start sm:self-auto text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/25 text-accent">
+              {card.status}
+            </span>
+          </div>
+
+          <p class="text-xs text-neutral-300 leading-relaxed mb-4">
+            {card.details}
+          </p>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-neutral-800/60">
+            {card.stats.map((s) => (
+              <div class="bg-neutral-950/70 border border-neutral-800/60 rounded-lg p-2.5">
+                <span class="text-[10px] text-neutral-400 block font-mono uppercase tracking-wider">{s.label}</span>
+                <span class="text-xs text-accent font-semibold font-mono mt-0.5 block">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Obfuscated Infrastructure Nodes -->
+  <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
+    <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
+      <span class="text-accent mr-2 font-bold select-none">*</span> infrastructure topology
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {infrastructureNodes.map((node) => (
+        <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/20 p-4">
+          <h3 class="text-sm font-semibold text-white">{node.name}</h3>
+          <span class="text-[11px] text-accent font-mono block mt-0.5">{node.tech}</span>
+          <p class="text-xs text-neutral-400 mt-2 leading-relaxed">{node.description}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Certifications & Verification -->
+  <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
+    <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
+      <span class="text-accent mr-2 font-bold select-none">*</span> security credentials
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+      <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
+        <span class="text-neutral-200">CompTIA Security+</span>
+        <span class="text-accent">Active Certification</span>
+      </div>
+      <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
+        <span class="text-neutral-200">CompTIA A+</span>
+        <span class="text-accent">Active Certification</span>
+      </div>
+      <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
+        <span class="text-neutral-200">TestOut Network Pro</span>
+        <span class="text-accent">Active Certification</span>
+      </div>
+      <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
+        <span class="text-neutral-200">TestOut Security Pro</span>
+        <span class="text-accent">Active Certification</span>
+      </div>
+    </div>
+  </section>
+
+  <Elsewhere />
+</Layout>

@@ -7,8 +7,8 @@ interface Props {
 }
 
 const {
-  title = "scushi · systems & software",
-  description = "personal portfolio, homelab architecture, and software engineering projects by scushi."
+  title = "scushi · Joshua Mattingly",
+  description = "personal portfolio, cybersecurity, homelab defense, and systems engineering projects by Joshua Mattingly (scushi)."
 } = Astro.props;
 ---
 
@@ -32,25 +32,57 @@ const {
     <meta name="theme-color" content="#ffade4" />
   </head>
   <body class="min-h-screen bg-[var(--color-canvas)] text-neutral-200 font-mono antialiased selection:bg-accent selection:text-neutral-950 relative overflow-x-hidden">
-    <!-- Interactive Background Spotlight Effect (Client-side, 0 server load) -->
-    <div id="pointer-spotlight" class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-700"></div>
+    <!-- Subtle, toned-down cursor spotlight (25% original diameter: 160px) -->
+    <div id="pointer-spotlight" class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-500"></div>
 
     <div class="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-16">
       <slot />
     </div>
 
     <script>
-      // Subtle cursor spotlight that follows mouse movement
+      // Subtle cursor spotlight (toned down to 160px radius)
       const spotlight = document.getElementById('pointer-spotlight');
       if (spotlight && window.matchMedia('(pointer: fine)').matches) {
         window.addEventListener('mousemove', (e) => {
           spotlight.style.opacity = '1';
-          spotlight.style.background = `radial-gradient(650px circle at ${e.clientX}px ${e.clientY}px, rgba(255, 173, 228, 0.05), transparent 80%)`;
+          spotlight.style.background = `radial-gradient(160px circle at ${e.clientX}px ${e.clientY}px, rgba(255, 173, 228, 0.06), transparent 85%)`;
         });
         window.addEventListener('mouseleave', () => {
           spotlight.style.opacity = '0';
         });
       }
+
+      // Universal keyboard shortcuts: [h], [p], [s]
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        const key = e.key.toLowerCase();
+        const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+
+        if (key === 'h') {
+          e.preventDefault();
+          if (currentPath === '/' || currentPath === '') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            window.location.href = '/';
+          }
+        } else if (key === 'p') {
+          e.preventDefault();
+          if (currentPath === '/projects') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            window.location.href = '/projects';
+          }
+        } else if (key === 's') {
+          e.preventDefault();
+          if (currentPath === '/systems') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            window.location.href = '/systems';
+          }
+        }
+      });
     </script>
   </body>
 </html>

@@ -1,26 +1,26 @@
 ---
-import { Server, Shield, Network, Database, Cpu } from 'lucide-astro';
+import { Server, ArrowUpRight } from 'lucide-astro';
 
 const services = [
-  { name: 'Caddy Edge & Tunnel', lxc: 'LXC 104', role: 'Cloudflare Zero-Trust Ingress & TLS', status: 'online' },
-  { name: 'Tailscale Router', lxc: 'LXC 100', role: 'Subnet 192.168.0.0/22 & WireGuard', status: 'online' },
-  { name: 'AdGuard Home', lxc: 'LXC 101', role: 'Local Network DNS & Sinkhole', status: 'online' },
-  { name: 'CouchDB LiveSync', lxc: 'LXC 106', role: 'Distributed Vault Replication', status: 'online' },
+  { name: 'Edge Ingress Gateway', tier: 'zero-trust', role: 'Cloudflare Tunnel & Automated TLS Ingress' },
+  { name: 'Encrypted Transit Node', tier: 'wireguard', role: 'Cross-site Tailscale mesh router & exit gateway' },
+  { name: 'Recursive DNS Sinkhole', tier: 'privacy', role: 'AdGuard Home with HaGeZi Pro threat protection' },
+  { name: 'Distributed Storage Sync', tier: 'replication', role: 'Continuous bidirectional CouchDB vault sync' },
 ];
 ---
 
 <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/20 p-5 mt-4 space-y-4">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-2.5">
-      <Server class="w-5 h-5 text-accent accent-glow-subtle" />
+      <Server class="w-5 h-5 text-accent" />
       <div>
         <h3 class="text-base font-semibold text-white">scushi-server (Proxmox VE)</h3>
-        <p class="text-xs text-neutral-400">self-hosted cluster powering scushi.dev</p>
+        <p class="text-xs text-neutral-400">virtualized homelab cluster powering scushi.dev</p>
       </div>
     </div>
     <div class="flex items-center gap-1.5 text-xs text-accent font-mono bg-accent/10 border border-accent/25 px-2.5 py-1 rounded-full">
       <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
-      100% uptime
+      100% nominal
     </div>
   </div>
 
@@ -29,7 +29,7 @@ const services = [
       <div class="rounded-lg bg-neutral-950/60 border border-neutral-800/60 p-3 hover:border-neutral-700/80 transition-colors">
         <div class="flex items-center justify-between text-xs mb-1">
           <span class="text-neutral-200 font-medium">{svc.name}</span>
-          <span class="text-[10px] text-accent font-mono">{svc.lxc}</span>
+          <span class="text-[10px] text-accent font-mono">{svc.tier}</span>
         </div>
         <p class="text-[11px] text-neutral-400">{svc.role}</p>
       </div>
@@ -38,6 +38,9 @@ const services = [
 
   <div class="flex items-center justify-between pt-2 border-t border-neutral-800/60 text-xs text-neutral-400 font-mono">
     <span>arch linux · hyprland · proxmox</span>
-    <span class="text-neutral-600">wan via cloudflared</span>
+    <a href="/systems" class="inline-flex items-center gap-1 text-accent hover:underline group">
+      view full architecture
+      <ArrowUpRight class="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+    </a>
   </div>
 </div>

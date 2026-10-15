@@ -1,0 +1,80 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Elsewhere from '../components/Elsewhere.astro';
+import { ArrowUpRight } from 'lucide-astro';
+
+const allProjects = [
+  {
+    title: 'HyprWpE',
+    href: 'https://github.com/SushiBirb/HyprWpE',
+    role: 'creator & maintainer',
+    timeline: 'active',
+    badge: 'wayland · shaders',
+    description: 'A native Wayland Wallpaper Engine for the Hyprland compositor. Plays high-res videos via mpvpaper, renders interactive web wallpapers using WebKitGTK, and executes animated 2D/3D scenes through a custom WebGL2 GLSL shader transpilation pipeline without Wine or Proton dependencies.',
+    tags: ['Wayland', 'Hyprland', 'GTK4', 'WebGL2', 'GLSL', 'Python', 'Rust'],
+  },
+  {
+    title: 'FlyAway',
+    href: 'https://github.com/SushiBirb/FlyAway',
+    role: 'hardened security & edge contributor',
+    timeline: '1st place ky tsa',
+    badge: 'security · hardware',
+    description: 'Enterprise badge scanning and automated student dismissal verification system developed for JCPS schools. Hardened with cryptographic access token validation, C++20/CPR/OpenSSL hardware kiosk scanner clients, and multi-tier database synchronization.',
+    tags: ['C++20', 'OpenSSL', 'CPR', 'ASP.NET Core', 'Cryptography', 'Embedded Kiosks', 'MySQL'],
+  },
+  {
+    title: 'slaytheland',
+    href: 'https://github.com/SushiBirb/slaytheland',
+    role: 'creator',
+    timeline: 'hyprland shell',
+    badge: 'qml · desktop shell',
+    description: 'A complete Slay the Princess desktop shell for Hyprland written natively in Quickshell (QML). Features living companions watching from screen corners, 12 fps pencil boil shaders, dynamic parallax perspectives, Foley audio, and Ryoku architecture integration.',
+    tags: ['Hyprland', 'Quickshell (QML)', 'GLSL Shaders', 'Arch Linux', 'Ryoku'],
+  },
+  {
+    title: 'autoapply',
+    href: 'https://github.com/SushiBirb/autoapply',
+    role: 'creator',
+    timeline: 'automation & ai',
+    badge: 'python · playwright',
+    description: 'Local-first Python CLI web automation tool leveraging Playwright browser automation for structured DOM form processing with human-in-the-loop verification controls and Gemini AI context-aware text generation.',
+    tags: ['Python', 'Playwright', 'Google Gemini API', 'OAuth 2.0', 'SQLite'],
+  },
+];
+---
+
+<Layout
+  title="projects · Joshua Mattingly (scushi)"
+  description="Software engineering, systems tools, desktop environments, and security projects by Joshua Mattingly (scushi)."
+>
+  <Navbar current="projects" />
+
+  <header class="mb-14 space-y-4">
+    <div class="flex items-center gap-2 text-xs font-mono text-accent">
+      <span class="inline-block w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+      <span>portfolio catalog</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white animate-fade-in">
+      projects
+    </h1>
+
+    <p class="text-sm text-neutral-400 animate-fade-in">
+      open source software, security tools, and linux desktop environments
+    </p>
+
+    <p class="text-neutral-300 text-sm sm:text-base leading-relaxed text-pretty max-w-[62ch] pt-2 animate-fade-in-up">
+      A collection of things I've built, ranging from native Wayland shader compositors to high-security kiosk authorization systems and local-first AI tooling.
+    </p>
+  </header>
+
+  <section class="space-y-6 pt-6 border-t border-neutral-800/80 animate-fade-in-up">
+    {allProjects.map((project) => (
+      <ProjectCard {...project} />
+    ))}
+  </section>
+
+  <Elsewhere />
+</Layout>
