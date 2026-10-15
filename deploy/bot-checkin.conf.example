@@ -1,0 +1,12 @@
+# /etc/bot-checkin.conf
+# Configuration for scushi.dev Bot Check-in Telemetry Receiver
+# Destination: /etc/bot-checkin.conf on LXC 104
+
+# Generic Webhook Notification (Supports ntfy.sh, Discord, Slack, Matrix webhooks)
+# Uncomment and set your target webhook URL:
+# WEBHOOK_URL=https://ntfy.sh/your-secret-scushi-beacon-topic
+
+# Signal REST API Notification (e.g. bbernhard/signal-cli-rest-api)
+# SIGNAL_URL=http://127.0.0.1:8080/v2/send
+# SIGNAL_NUMBER=+1234567890
+# SIGNAL_RECIPIENT=+1234567890
