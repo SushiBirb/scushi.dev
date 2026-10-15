@@ -1,6 +1,5 @@
 ---
 import '../styles/global.css';
-import VectorField from '../components/VectorField.astro';
 
 interface Props {
   title?: string;
@@ -33,9 +32,6 @@ const {
     <meta name="theme-color" content="#ffade4" />
   </head>
   <body class="min-h-screen bg-[var(--color-canvas)] text-neutral-200 font-mono antialiased selection:bg-accent selection:text-neutral-950 relative overflow-x-hidden">
-    <!-- Interactive Vector Field Background (Needles orient toward cursor) -->
-    <VectorField />
-
     <!-- Subtle, toned-down cursor spotlight (25% original diameter: 160px) -->
     <div id="pointer-spotlight" class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-500"></div>
 
