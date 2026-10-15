@@ -1,0 +1,7 @@
+# robots.txt for scushi.dev
+
+User-agent: *
+Allow: /
+
+# Standard crawler references
+Sitemap: https://scushi.dev/sitemap-index.xml
