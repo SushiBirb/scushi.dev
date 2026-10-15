@@ -130,3 +130,17 @@ pnpm preview
 - LinkedIn: [linkedin.com/in/joshua-mattingly-39145721b](https://linkedin.com/in/joshua-mattingly-39145721b)
 - GitHub: [github.com/SushiBirb](https://github.com/SushiBirb)
 - Email: `jmattingly@proitserv.com`
+
+---
+
+## 8. Acknowledgments & Design Attribution
+
+- **Visual Inspiration:** The minimalist monospace aesthetic, centered container layout, and dark pink palette were inspired by [nexxel.dev](https://nexxel.dev) by [Shoubhit Dash (nexxeln)](https://github.com/nexxeln).
+- **Implementation:** All code in this repository is an original, clean-room implementation written from scratch in Astro 5, TypeScript, and Tailwind CSS v4, featuring custom canvas spotlight rendering, interactive SVG network topology flows, and a dedicated backend bot telemetry daemon.
+
+---
+
+## 9. License
+
+This project is open-source software licensed under the [MIT License](LICENSE).
+
