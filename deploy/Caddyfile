@@ -1,0 +1,51 @@
+# Production Hardened Caddy Configuration for scushi.dev
+# Target Host: LXC 104 (caddy) or Proxmox Static Web Container
+
+scushi.dev, www.scushi.dev {
+    root * /var/www/scushi.dev
+    file_server
+    encode zstd gzip
+
+    # Security Hardening Headers (ECC Standard)
+    header {
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+
+        # Prevent clickjacking / iframe embedding
+        X-Frame-Options "DENY"
+
+        # Control referrer leakage
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Restrict dangerous browser capabilities
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
+        # HTTP Strict Transport Security (HSTS)
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+        # Content Security Policy (Astro SSG Baseline)
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+
+        # Obfuscate web server identity
+        -Server
+        -X-Powered-By
+    }
+
+    # Static file fallback routing
+    try_files {path} {path}/ /index.html
+
+    # Block access to hidden files and git metadata
+    @hidden {
+        path */.*
+    }
+    respond @hidden 404
+
+    # Logging
+    log {
+        output file /var/log/caddy/scushi.dev.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+    }
+}

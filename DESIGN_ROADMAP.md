@@ -18,7 +18,7 @@ All exploratory backgrounds remain fully preserved in `src/components/archive/` 
    - 2D lattice of directional needle vectors rotating toward the mouse cursor via $\text{atan2}(dy, dx)$ with shortest-arc lerp and proximity lighting.
 
 2. **Procedural ASCII Descent (`src/components/archive/AsciiDescent.astro` & `src/components/AsciiDescent.astro`):**
-   - 3-tier parallax text canvas transitioning from celestial starfields (`* · ° ✦ ~ +`) at the top, to infrastructural matrix gates (`| [ ] # _ =`) in the middle, to subterranean infernal stalagmites (`v ▼ . , ; %`) at the bottom.
+   - 3-tier parallax text canvas transitioning from celestial starfields (`* · ° * ~ +`) at the top, to infrastructural matrix gates (`| [ ] # _ =`) in the middle, to subterranean infernal stalagmites (`v ▼ . , ; %`) at the bottom.
 
 3. **Progressive Botanical Vines (`src/components/GrowingVines.astro`):**
    - Scroll-depth reactive organic vines and leaf buds in viewport margins inspired by *Slay the Princess* (`slaytheland`).
