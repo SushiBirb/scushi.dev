@@ -27,10 +27,8 @@
     // Spotlight flashlight radius around cursor
     const spotlightRadius = 180;
 
-    // Procedural glyphs based on vertical descent depth
-    const heavenGlyphs = ['*', '·', '°', '✦', '~', '^', '+', ':', '·', ' '];
-    const purgatoryGlyphs = ['|', '/', '\\', '[', ']', '#', '_', '=', ':', ';', '0', '1'];
-    const abyssGlyphs = ['v', '▼', '.', ',', ';', '%', '#', '/', '\\', '§'];
+    // Unified, cohesive monospace glyph set (consistent across the whole page, no abrupt stages)
+    const glyphs = ['·', ':', '+', '*', 'x', '#', '/', '\\', '[', ']', '0', '1', '✦', '-', '~'];
 
     let mouseX = -9999;
     let mouseY = -9999;
@@ -48,6 +46,7 @@
       rows = Math.ceil(height / charH) + 1;
     }
 
+    // Deterministic pseudo-noise for grid coordinates
     function pseudoNoise(x: number, y: number): number {
       const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
       return n - Math.floor(n);
@@ -64,14 +63,14 @@
         ctx!.textAlign = 'center';
         ctx!.textBaseline = 'middle';
 
-        // Calculate bounding box around mouse in grid coordinates to avoid checking all cells
+        // Calculate bounding box around mouse in grid coordinates
         const minCol = Math.max(0, Math.floor((mouseX - spotlightRadius) / charW));
         const maxCol = Math.min(cols, Math.ceil((mouseX + spotlightRadius) / charW));
         const minRow = Math.max(0, Math.floor((mouseY - spotlightRadius) / charH));
         const maxRow = Math.min(rows, Math.ceil((mouseY + spotlightRadius) / charH));
 
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const scrollPercent = docHeight > 0 ? Math.min(Math.max(window.scrollY / docHeight, 0), 1) : 0;
+        // Fixed world grid row tracking to ensure glyph positions stay stable during scroll
+        const scrollRowOffset = Math.floor(window.scrollY / charH);
 
         for (let c = minCol; c <= maxCol; c++) {
           const x = c * charW;
@@ -85,27 +84,17 @@
             // Outside the cursor spotlight radius -> 100% invisible
             if (dist >= spotlightRadius) continue;
 
-            // Normalized descent depth (Heaven -> Purgatory -> Abyss)
-            const worldY = (y + window.scrollY) / (document.documentElement.scrollHeight || 1);
-            const descent = Math.min(Math.max(worldY * 0.7 + scrollPercent * 0.3, 0), 1);
+            // Stable world coordinates so characters don't jump when scrolling
+            const worldRow = r + scrollRowOffset;
+            const rand = pseudoNoise(c, worldRow);
+            const rand2 = pseudoNoise(c + 47, worldRow + 89);
 
-            const rand = pseudoNoise(c, r);
-            const rand2 = pseudoNoise(c + 31, r + 73);
+            // Sparse density check: ~28% of cells have glyphs, creating a clean matrix
+            if (rand < 0.72) continue;
 
-            // Select character based on depth
-            let char = '·';
-            let color = '#ffade4';
-
-            if (descent < 0.35) {
-              char = heavenGlyphs[Math.floor(rand2 * heavenGlyphs.length)];
-              color = rand2 > 0.6 ? '#ffd7ee' : '#ffade4';
-            } else if (descent < 0.7) {
-              char = purgatoryGlyphs[Math.floor(rand2 * purgatoryGlyphs.length)];
-              color = rand2 > 0.5 ? '#ffade4' : '#ddbecf';
-            } else {
-              char = abyssGlyphs[Math.floor(rand2 * abyssGlyphs.length)];
-              color = rand2 > 0.6 ? '#f5b9a1' : '#ffade4';
-            }
+            // Unified glyph and accent pink palette
+            const char = glyphs[Math.floor(rand2 * glyphs.length)];
+            const color = rand2 > 0.65 ? '#ffd7ee' : '#ffade4';
 
             // Exponential spotlight falloff: bright in center, soft fade at perimeter
             const intensity = Math.pow(1 - dist / spotlightRadius, 1.4);
