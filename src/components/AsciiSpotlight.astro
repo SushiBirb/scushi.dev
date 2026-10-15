@@ -27,8 +27,13 @@
     // Spotlight flashlight radius around cursor
     const spotlightRadius = 180;
 
-    // Unified, cohesive monospace glyph set (consistent across the whole page, no abrupt stages)
-    const glyphs = ['·', ':', '+', '*', 'x', '#', '/', '\\', '[', ']', '0', '1', '✦', '-', '~'];
+    // 3 Palettes for the Continuous Descent Gradient
+    // Top: Airy, celestial, sparse stars and gentle glyphs
+    const heavenGlyphs = ['·', '°', '*', '✦', '~', '^', '+', ':', '·'];
+    // Mid: Structural logic gates, matrix conduits, binary brackets
+    const matrixGlyphs = ['|', '/', '\\', '[', ']', '#', '_', '=', '0', '1', ':'];
+    // Bottom: Dense subterranean roots, stalagmites, cracked stone, embers
+    const abyssGlyphs = ['v', '▼', ';', '%', '#', '&', '§', 'x', '/\\', 'v', ','];
 
     let mouseX = -9999;
     let mouseY = -9999;
@@ -46,7 +51,7 @@
       rows = Math.ceil(height / charH) + 1;
     }
 
-    // Deterministic pseudo-noise for grid coordinates
+    // Deterministic pseudo-random noise for grid coordinates
     function pseudoNoise(x: number, y: number): number {
       const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
       return n - Math.floor(n);
@@ -71,6 +76,7 @@
 
         // Fixed world grid row tracking to ensure glyph positions stay stable during scroll
         const scrollRowOffset = Math.floor(window.scrollY / charH);
+        const totalDocHeight = Math.max(document.documentElement.scrollHeight, 1200);
 
         for (let c = minCol; c <= maxCol; c++) {
           const x = c * charW;
@@ -84,21 +90,55 @@
             // Outside the cursor spotlight radius -> 100% invisible
             if (dist >= spotlightRadius) continue;
 
-            // Stable world coordinates so characters don't jump when scrolling
+            // Stable world coordinates
             const worldRow = r + scrollRowOffset;
+            const worldY = worldRow * charH;
+
+            // Normalized descent depth (0.0 = Top/Heaven -> 1.0 = Bottom/Abyss)
+            const depth = Math.min(Math.max(worldY / totalDocHeight, 0), 1);
+
             const rand = pseudoNoise(c, worldRow);
             const rand2 = pseudoNoise(c + 47, worldRow + 89);
+            const rand3 = pseudoNoise(c + 91, worldRow + 13);
 
-            // Sparse density check: ~28% of cells have glyphs, creating a clean matrix
-            if (rand < 0.72) continue;
+            // Continuous Density Gradient:
+            // Top: Threshold ~0.86 (only 14% of cells filled, wide gaps, very spacey)
+            // Bottom: Threshold ~0.42 (58% of cells filled, heavily clustered, dense)
+            const densityThreshold = 0.86 - Math.pow(depth, 0.8) * 0.44;
+            if (rand < densityThreshold) continue;
 
-            // Unified glyph and accent pink palette
-            const char = glyphs[Math.floor(rand2 * glyphs.length)];
-            const color = rand2 > 0.65 ? '#ffd7ee' : '#ffade4';
+            // Continuous Probabilistic Blend between Character Stages:
+            // Continuous weights for smooth crossfade with zero hard steps
+            let wHeaven = Math.max(0, 1 - depth * 2.2); // Dominates 0.0 -> 0.45
+            let wMatrix = Math.max(0, 1 - Math.abs(depth - 0.5) * 2.2); // Dominates 0.25 -> 0.75
+            let wAbyss = Math.max(0, (depth - 0.45) * 2.0); // Dominates 0.55 -> 1.0
+
+            const totalW = wHeaven + wMatrix + wAbyss || 1;
+            const normHeaven = wHeaven / totalW;
+            const normMatrix = wMatrix / totalW;
+
+            let char = '·';
+            let color = '#ffade4';
+
+            if (rand3 < normHeaven) {
+              // Sampled from Celestial palette
+              char = heavenGlyphs[Math.floor(rand2 * heavenGlyphs.length)];
+              color = rand2 > 0.5 ? '#ffd7ee' : '#ffade4'; // Airy ethereal highlight
+            } else if (rand3 < normHeaven + normMatrix) {
+              // Sampled from Matrix / Structural palette
+              char = matrixGlyphs[Math.floor(rand2 * matrixGlyphs.length)];
+              color = rand2 > 0.6 ? '#ffade4' : '#ddbecf'; // Core system pink/steel
+            } else {
+              // Sampled from Abyss / Infernal palette
+              char = abyssGlyphs[Math.floor(rand2 * abyssGlyphs.length)];
+              color = rand2 > 0.6 ? '#f5b9a1' : '#ffade4'; // Warm amber/ember tones
+            }
 
             // Exponential spotlight falloff: bright in center, soft fade at perimeter
             const intensity = Math.pow(1 - dist / spotlightRadius, 1.4);
-            const alpha = intensity * 0.65;
+            // Slightly deeper opacity at lower depths to complement density
+            const baseMaxAlpha = 0.55 + depth * 0.2;
+            const alpha = intensity * baseMaxAlpha;
 
             if (alpha <= 0.02) continue;
 
