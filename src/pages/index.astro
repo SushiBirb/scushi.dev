@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar.astro';
 import ScrambleText from '../components/ScrambleText.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import HomelabNode from '../components/HomelabNode.astro';
+import Awards from '../components/Awards.astro';
 import Elsewhere from '../components/Elsewhere.astro';
 import { ArrowUpRight } from 'lucide-astro';
 
@@ -64,6 +65,29 @@ const featuredProjects = [
       <span>louisville, ky</span>
     </p>
 
+    <div class="flex items-center gap-2 pt-0.5 font-mono text-xs animate-fade-in">
+      <a
+        href="https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1ac4b63ba1ea10c1c"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-accent/10 border border-accent/25 text-accent hover:border-accent transition-colors"
+        title="Official CompTIA Security+ Transcript Verification"
+      >
+        <span>Security+ ✓</span>
+        <ArrowUpRight class="w-3 h-3" />
+      </a>
+      <a
+        href="https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-accent/10 border border-accent/25 text-accent hover:border-accent transition-colors"
+        title="Official CompTIA A+ Transcript Verification"
+      >
+        <span>A+ ✓</span>
+        <ArrowUpRight class="w-3 h-3" />
+      </a>
+    </div>
+
     <p class="text-neutral-300 text-pretty max-w-[60ch] leading-relaxed pt-2 animate-fade-in-up text-sm sm:text-base">
       I'm a security-focused IT professional and CIS student at the University of Louisville with active <span class="text-white">CompTIA Security+</span> and <span class="text-white">A+</span> certifications. I spend my time engineering autonomous intrusion defense in my homelab, building custom desktop shells on Arch Linux with Hyprland shaders, and developing full-stack software.
     </p>
@@ -113,6 +137,9 @@ const featuredProjects = [
 
     <HomelabNode />
   </section>
+
+  <!-- Honors & Leadership Section -->
+  <Awards />
 
   <!-- Elsewhere Footer -->
   <Elsewhere />

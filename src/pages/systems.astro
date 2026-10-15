@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import Elsewhere from '../components/Elsewhere.astro';
+import InfrastructureMap from '../components/InfrastructureMap.astro';
 import { Shield, Server, Network, Activity, Lock, Cpu, Database, ArrowLeft } from 'lucide-astro';
 
 const securityMetrics = [
@@ -140,45 +141,101 @@ const infrastructureNodes = [
     </div>
   </section>
 
-  <!-- Obfuscated Infrastructure Nodes -->
+  <!-- Interactive Infrastructure Flow Map -->
+  <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
+    <InfrastructureMap />
+  </section>
+
+  <!-- Network Hardening & Telemetry Section -->
   <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
     <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
-      <span class="text-accent mr-2 font-bold select-none">*</span> infrastructure topology
+      <span class="text-accent mr-2 font-bold select-none">*</span> security & threat telemetry
     </h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {infrastructureNodes.map((node) => (
-        <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/20 p-4">
-          <h3 class="text-sm font-semibold text-white">{node.name}</h3>
-          <span class="text-[11px] text-accent font-mono block mt-0.5">{node.tech}</span>
-          <p class="text-xs text-neutral-400 mt-2 leading-relaxed">{node.description}</p>
+    <div class="space-y-6">
+      {securityMetrics.map((card) => (
+        <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/30 p-5 hover:border-neutral-700/80 transition-colors">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="text-lg font-semibold text-white">{card.title}</h3>
+              <p class="text-xs text-neutral-400">{card.category}</p>
+            </div>
+            <span class="self-start sm:self-auto text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/25 text-accent">
+              {card.status}
+            </span>
+          </div>
+
+          <p class="text-xs text-neutral-300 leading-relaxed mb-4">
+            {card.details}
+          </p>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-neutral-800/60">
+            {card.stats.map((s) => (
+              <div class="bg-neutral-950/70 border border-neutral-800/60 rounded-lg p-2.5">
+                <span class="text-[10px] text-neutral-400 block font-mono uppercase tracking-wider">{s.label}</span>
+                <span class="text-xs text-accent font-semibold font-mono mt-0.5 block">{s.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
   </section>
 
-  <!-- Certifications & Verification -->
+  <!-- Certifications & Official Verification -->
   <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
-    <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
+    <h2 class="text-2xl font-semibold mb-2 flex items-center text-white">
       <span class="text-accent mr-2 font-bold select-none">*</span> security credentials
     </h2>
+    <p class="text-xs text-neutral-400 mb-6 font-mono">
+      official certification transcripts verified through CompTIA CertMetrics
+    </p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+      <a
+        href="https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1ac4b63ba1ea10c1c"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between hover:border-accent transition-all"
+      >
+        <div>
+          <span class="text-neutral-200 block font-semibold group-hover:text-accent transition-colors">CompTIA Security+</span>
+          <span class="text-[11px] text-neutral-500">ID: 7b38561065474ce1ac4b63ba1ea10c1c</span>
+        </div>
+        <span class="text-accent flex items-center gap-1 text-[11px]">
+          verify ↗
+        </span>
+      </a>
+
+      <a
+        href="https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between hover:border-accent transition-all"
+      >
+        <div>
+          <span class="text-neutral-200 block font-semibold group-hover:text-accent transition-colors">CompTIA A+</span>
+          <span class="text-[11px] text-neutral-500">ID: SB49Z15QFN411V33</span>
+        </div>
+        <span class="text-accent flex items-center gap-1 text-[11px]">
+          verify ↗
+        </span>
+      </a>
+
       <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
-        <span class="text-neutral-200">CompTIA Security+</span>
-        <span class="text-accent">Active Certification</span>
+        <div>
+          <span class="text-neutral-200 block font-semibold">TestOut Network Pro</span>
+          <span class="text-[11px] text-neutral-500">Enterprise Infrastructure</span>
+        </div>
+        <span class="text-accent text-[11px]">active ✓</span>
       </div>
+
       <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
-        <span class="text-neutral-200">CompTIA A+</span>
-        <span class="text-accent">Active Certification</span>
-      </div>
-      <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
-        <span class="text-neutral-200">TestOut Network Pro</span>
-        <span class="text-accent">Active Certification</span>
-      </div>
-      <div class="rounded-lg bg-neutral-950/70 border border-neutral-800/80 p-3.5 flex items-center justify-between">
-        <span class="text-neutral-200">TestOut Security Pro</span>
-        <span class="text-accent">Active Certification</span>
+        <div>
+          <span class="text-neutral-200 block font-semibold">TestOut Security Pro</span>
+          <span class="text-[11px] text-neutral-500">Network & System Defense</span>
+        </div>
+        <span class="text-accent text-[11px]">active ✓</span>
       </div>
     </div>
   </section>

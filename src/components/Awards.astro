@@ -1,0 +1,62 @@
+---
+import { Trophy, Medal, Award } from 'lucide-astro';
+
+const awards = [
+  {
+    title: '1st Place in State — Networking Infrastructures',
+    org: 'FBLA (Future Business Leaders of America)',
+    year: '2025',
+    highlight: 'State Champion',
+    description: 'Demonstrated mastery in enterprise networking topologies, routing protocols, subnetting, network troubleshooting, and perimeter security architectures.',
+  },
+  {
+    title: '1st Place in State — Software Development',
+    org: 'TSA (Technology Student Association)',
+    year: '2025',
+    highlight: 'State Champion',
+    description: 'Awarded 1st place for architecting and engineering FlyAway: an enterprise badge scanning and automated attendance verification platform with cryptographic authorization.',
+  },
+  {
+    title: 'National Competitor — Management Information Systems',
+    org: 'FBLA National Leadership Conference (Orlando, FL)',
+    year: '2024',
+    highlight: 'National Finalist',
+    description: 'Advanced to National Competition following 1st Place in Region and 3rd Place in State for enterprise MIS analysis, data processing, and IT problem-solving.',
+  },
+  {
+    title: 'Co-Founder & Chapter Leadership',
+    org: 'Eastern High School TSA',
+    year: '2023 – 2025',
+    highlight: 'Leadership',
+    description: 'Co-founded the high school TSA chapter to mentor students in competitive software engineering, networking security, and STEM technical events.',
+  },
+];
+---
+
+<section id="awards" class="mb-16 pt-10 border-t border-neutral-800/80 animate-fade-in-up">
+  <div class="flex items-baseline justify-between mb-6">
+    <h2 class="text-2xl font-semibold flex items-center text-white">
+      <span class="text-accent mr-2 font-bold select-none">*</span> honors & leadership
+    </h2>
+    <span class="text-xs text-neutral-400 font-mono hidden sm:inline">competitions & awards</span>
+  </div>
+
+  <div class="space-y-3.5">
+    {awards.map((a) => (
+      <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/25 p-4 hover:border-neutral-700/80 transition-colors">
+        <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 mb-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-sm font-semibold text-white">{a.title}</h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-accent font-semibold">
+              {a.highlight}
+            </span>
+          </div>
+          <span class="text-xs text-neutral-400 font-mono shrink-0">{a.year}</span>
+        </div>
+
+        <p class="text-xs text-accent/80 font-mono">{a.org}</p>
+        <p class="text-xs text-neutral-300 mt-2 leading-relaxed">{a.description}</p>
+      </div>
+    ))}
+  </div>
+</section>

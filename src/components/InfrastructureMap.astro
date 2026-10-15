@@ -1,0 +1,194 @@
+---
+import { Shield, Eye, Network, Server, ArrowRight, Lock, Activity, Database, CheckCircle2 } from 'lucide-astro';
+
+// Architecture Nodes (Obfuscated for Security)
+const nodes = [
+  {
+    id: 'edge',
+    name: 'Zero-Trust Edge Ingress',
+    badge: 'Edge Gateway',
+    tech: 'Cloudflare Tunnel + Caddy TLS',
+    action: 'Ingress Termination',
+    protocol: 'HTTPS / TLS 1.3 / QUIC',
+    summary: 'Public WAN ingress is proxied through an encrypted Cloudflare tunnel directly into Caddy. No public ports are opened on the physical edge router.',
+    connections: ['transit'],
+  },
+  {
+    id: 'transit',
+    name: 'Secure Transit Gateway',
+    badge: 'Network Core',
+    tech: 'Linux Gateway & WireGuard Mesh',
+    action: 'Encrypted Routing',
+    protocol: 'Tailscale Mesh Overlay',
+    summary: 'Central virtual transit node routing all inter-container, LAN, and remote endpoint traffic across isolated virtual bridges.',
+    connections: ['dpi', 'ids', 'ips', 'dns'],
+  },
+  {
+    id: 'dpi',
+    name: 'ntopng & nDPI Analyzer',
+    badge: 'Flow Telemetry',
+    tech: 'nDPI + Redis Cache',
+    action: 'Layer 2–7 Deep Inspection',
+    protocol: 'L7 Protocol Analytics',
+    summary: 'Inspects packet payloads in real-time, classifying Layer 7 protocols, tracking network flows, and alerting on protocol anomalies.',
+    connections: ['dns'],
+  },
+  {
+    id: 'ids',
+    name: 'Maltrail Threat IDS',
+    badge: 'Intrusion Detection',
+    tech: 'Deep Heuristic Engine',
+    action: 'C2 Beaconing Detection',
+    protocol: 'Threat Feeds & IOC Matching',
+    summary: 'Scans network flows for known Command & Control (C2) beaconing patterns, malicious domain lookups, and suspicious outbound ports.',
+    connections: ['ips'],
+  },
+  {
+    id: 'ips',
+    name: 'CrowdSec IPS (v1.8.1)',
+    badge: 'Active Defense',
+    tech: 'Kernel Bouncers (nftables)',
+    action: 'Automated IP Remediation',
+    protocol: 'Global Threat Mesh Consensus',
+    summary: 'Behavioral detection engine that ingests system logs and immediately triggers kernel-level firewall drops for aggressive scanning or brute-force behavior.',
+    connections: ['dns', 'cluster'],
+  },
+  {
+    id: 'dns',
+    name: 'AdGuard Home Sinkhole',
+    badge: 'DNS Privacy',
+    tech: 'Authoritative DHCP + Recursive DoH',
+    action: 'Threat & Telemetry Filtering',
+    protocol: 'DNS-over-HTTPS / HaGeZi Pro',
+    summary: 'All internal and remote DNS requests are resolved recursively over encrypted DoH while dropping telemetry, adware, and known malicious domains at the gateway.',
+    connections: ['cluster'],
+  },
+  {
+    id: 'cluster',
+    name: 'Proxmox Virtual Cluster',
+    badge: 'Hypervisor Host',
+    tech: 'Isolated Virtual Containers',
+    action: 'Privilege Isolation',
+    protocol: 'Multi-Core Virtualization',
+    summary: 'Hardware hypervisor hosting segregated containerized network daemons, databases, and services within dedicated kernel namespaces.',
+    connections: ['storage'],
+  },
+  {
+    id: 'storage',
+    name: 'CouchDB Replication',
+    badge: 'Encrypted Vault',
+    tech: 'Apache CouchDB 3.5.2',
+    action: 'Continuous Bidirectional Sync',
+    protocol: 'Encrypted REST / HTTP2',
+    summary: 'Zero-latency multi-client database replicating academic, security, and technical vaults continuously across workstations and mobile endpoints.',
+    connections: [],
+  },
+];
+---
+
+<div class="rounded-xl border border-neutral-800/80 bg-neutral-900/30 p-5 space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-4">
+    <div>
+      <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+        <Activity class="w-5 h-5 text-accent" />
+        Interactive Defense & Traffic Topology
+      </h3>
+      <p class="text-xs text-neutral-400 mt-0.5">
+        Click or hover any node to inspect traffic flow, security inspection layers, and protocols.
+      </p>
+    </div>
+    <div class="flex items-center gap-2 text-xs font-mono text-neutral-400">
+      <span class="inline-block w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+      <span>topology: live inspection</span>
+    </div>
+  </div>
+
+  <!-- Interactive Node Grid Flow -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    {nodes.map((n, i) => (
+      <button
+        type="button"
+        data-node-id={n.id}
+        data-node-name={n.name}
+        data-node-tech={n.tech}
+        data-node-badge={n.badge}
+        data-node-action={n.action}
+        data-node-protocol={n.protocol}
+        data-node-summary={n.summary}
+        class={`topo-node text-left rounded-lg p-3.5 border transition-all duration-200 cursor-pointer ${
+          i === 0
+            ? 'bg-neutral-900/90 border-accent/40 shadow-sm'
+            : 'bg-neutral-950/70 border-neutral-800/80 hover:border-accent/30'
+        }`}
+      >
+        <div class="flex items-center justify-between text-xs mb-1.5">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold">{n.badge}</span>
+          <span class="text-[10px] font-mono text-neutral-500">step 0{i + 1}</span>
+        </div>
+        <h4 class="text-sm font-semibold text-white group-hover:text-accent transition-colors">{n.name}</h4>
+        <p class="text-[11px] text-neutral-400 mt-1 line-clamp-1">{n.tech}</p>
+      </button>
+    ))}
+  </div>
+
+  <!-- Dynamic Node Inspector Detail Card -->
+  <div id="inspector-card" class="rounded-lg bg-neutral-950/80 border border-neutral-800 p-4 transition-all duration-300">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-800/70 pb-3 mb-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <h4 id="inspect-name" class="text-base font-semibold text-white">Zero-Trust Edge Ingress</h4>
+          <span id="inspect-badge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-accent/10 border border-accent/25 text-accent">
+            Edge Gateway
+          </span>
+        </div>
+        <p id="inspect-tech" class="text-xs text-neutral-400 mt-0.5 font-mono">Cloudflare Tunnel + Caddy TLS</p>
+      </div>
+
+      <div class="flex items-center gap-2 font-mono text-xs text-neutral-300">
+        <span class="text-neutral-500">Protocol:</span>
+        <span id="inspect-protocol" class="text-accent">HTTPS / TLS 1.3 / QUIC</span>
+      </div>
+    </div>
+
+    <p id="inspect-summary" class="text-xs text-neutral-300 leading-relaxed">
+      Public WAN ingress is proxied through an encrypted Cloudflare tunnel directly into Caddy. No public ports are opened on the physical edge router.
+    </p>
+
+    <div class="mt-3.5 pt-3 border-t border-neutral-800/70 flex items-center justify-between text-xs font-mono">
+      <span class="text-neutral-500">Inspection Action:</span>
+      <span id="inspect-action" class="text-neutral-200 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded">
+        Ingress Termination
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const nodeButtons = document.querySelectorAll<HTMLButtonElement>('.topo-node');
+  const inspectName = document.getElementById('inspect-name');
+  const inspectBadge = document.getElementById('inspect-badge');
+  const inspectTech = document.getElementById('inspect-tech');
+  const inspectProtocol = document.getElementById('inspect-protocol');
+  const inspectSummary = document.getElementById('inspect-summary');
+  const inspectAction = document.getElementById('inspect-action');
+
+  nodeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      // Highlight active button
+      nodeButtons.forEach((b) => {
+        b.classList.remove('bg-neutral-900/90', 'border-accent/40');
+        b.classList.add('bg-neutral-950/70', 'border-neutral-800/80');
+      });
+      btn.classList.remove('bg-neutral-950/70', 'border-neutral-800/80');
+      btn.classList.add('bg-neutral-900/90', 'border-accent/40');
+
+      // Update inspector card details
+      if (inspectName) inspectName.innerText = btn.dataset.nodeName || '';
+      if (inspectBadge) inspectBadge.innerText = btn.dataset.nodeBadge || '';
+      if (inspectTech) inspectTech.innerText = btn.dataset.nodeTech || '';
+      if (inspectProtocol) inspectProtocol.innerText = btn.dataset.nodeProtocol || '';
+      if (inspectSummary) inspectSummary.innerText = btn.dataset.nodeSummary || '';
+      if (inspectAction) inspectAction.innerText = btn.dataset.nodeAction || '';
+    });
+  });
+</script>

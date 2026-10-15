@@ -1,0 +1,156 @@
+---
+---
+
+<canvas
+  id="ascii-spotlight-canvas"
+  class="fixed inset-0 pointer-events-none z-0 w-full h-full select-none"
+  aria-hidden="true"
+></canvas>
+
+<script>
+  function initAsciiSpotlight() {
+    const canvas = document.getElementById('ascii-spotlight-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
+    // Grid sizing
+    const charW = 14;
+    const charH = 18;
+    let cols = 0;
+    let rows = 0;
+
+    // Spotlight flashlight radius around cursor
+    const spotlightRadius = 180;
+
+    // Procedural glyphs based on vertical descent depth
+    const heavenGlyphs = ['*', '·', '°', '✦', '~', '^', '+', ':', '·', ' '];
+    const purgatoryGlyphs = ['|', '/', '\\', '[', ']', '#', '_', '=', ':', ';', '0', '1'];
+    const abyssGlyphs = ['v', '▼', '.', ',', ';', '%', '#', '/', '\\', '§'];
+
+    let mouseX = -9999;
+    let mouseY = -9999;
+    let isMouseInWindow = false;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx?.scale(dpr, dpr);
+
+      cols = Math.ceil(width / charW) + 1;
+      rows = Math.ceil(height / charH) + 1;
+    }
+
+    function pseudoNoise(x: number, y: number): number {
+      const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+      return n - Math.floor(n);
+    }
+
+    let animationFrameId: number;
+
+    function render(time: number) {
+      ctx!.clearRect(0, 0, width, height);
+
+      // Only draw if mouse is inside the viewport
+      if (isMouseInWindow && mouseX > -100 && mouseX < width + 100 && mouseY > -100 && mouseY < height + 100) {
+        ctx!.font = '11px "JetBrains Mono", monospace';
+        ctx!.textAlign = 'center';
+        ctx!.textBaseline = 'middle';
+
+        // Calculate bounding box around mouse in grid coordinates to avoid checking all cells
+        const minCol = Math.max(0, Math.floor((mouseX - spotlightRadius) / charW));
+        const maxCol = Math.min(cols, Math.ceil((mouseX + spotlightRadius) / charW));
+        const minRow = Math.max(0, Math.floor((mouseY - spotlightRadius) / charH));
+        const maxRow = Math.min(rows, Math.ceil((mouseY + spotlightRadius) / charH));
+
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = docHeight > 0 ? Math.min(Math.max(window.scrollY / docHeight, 0), 1) : 0;
+
+        for (let c = minCol; c <= maxCol; c++) {
+          const x = c * charW;
+          const dx = mouseX - x;
+
+          for (let r = minRow; r <= maxRow; r++) {
+            const y = r * charH;
+            const dy = mouseY - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Outside the cursor spotlight radius -> 100% invisible
+            if (dist >= spotlightRadius) continue;
+
+            // Normalized descent depth (Heaven -> Purgatory -> Abyss)
+            const worldY = (y + window.scrollY) / (document.documentElement.scrollHeight || 1);
+            const descent = Math.min(Math.max(worldY * 0.7 + scrollPercent * 0.3, 0), 1);
+
+            const rand = pseudoNoise(c, r);
+            const rand2 = pseudoNoise(c + 31, r + 73);
+
+            // Select character based on depth
+            let char = '·';
+            let color = '#ffade4';
+
+            if (descent < 0.35) {
+              char = heavenGlyphs[Math.floor(rand2 * heavenGlyphs.length)];
+              color = rand2 > 0.6 ? '#ffd7ee' : '#ffade4';
+            } else if (descent < 0.7) {
+              char = purgatoryGlyphs[Math.floor(rand2 * purgatoryGlyphs.length)];
+              color = rand2 > 0.5 ? '#ffade4' : '#ddbecf';
+            } else {
+              char = abyssGlyphs[Math.floor(rand2 * abyssGlyphs.length)];
+              color = rand2 > 0.6 ? '#f5b9a1' : '#ffade4';
+            }
+
+            // Exponential spotlight falloff: bright in center, soft fade at perimeter
+            const intensity = Math.pow(1 - dist / spotlightRadius, 1.4);
+            const alpha = intensity * 0.65;
+
+            if (alpha <= 0.02) continue;
+
+            ctx!.fillStyle = color;
+            ctx!.globalAlpha = alpha;
+            ctx!.fillText(char, x, y);
+          }
+        }
+      }
+
+      ctx!.globalAlpha = 1;
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      isMouseInWindow = true;
+    }
+
+    function onMouseLeave() {
+      isMouseInWindow = false;
+      mouseX = -9999;
+      mouseY = -9999;
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    document.addEventListener('mouseleave', onMouseLeave);
+
+    resize();
+    animationFrameId = requestAnimationFrame(render);
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseleave', onMouseLeave);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }
+
+  initAsciiSpotlight();
+  document.addEventListener('astro:page-load', initAsciiSpotlight);
+</script>

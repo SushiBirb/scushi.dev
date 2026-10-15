@@ -1,4 +1,6 @@
 ---
+import { ArrowUpRight, Copy, Check } from 'lucide-astro';
+
 interface Props {
   email?: string;
   github?: string;
@@ -10,6 +12,8 @@ const {
   github = "https://github.com/SushiBirb",
   linkedin = "https://linkedin.com/in/joshua-mattingly-39145721b"
 } = Astro.props;
+
+const mailtoUrl = `mailto:${email}?subject=Hello%20from%20scushi.dev`;
 ---
 
 <section id="elsewhere" class="mt-14 pt-10 pb-16 border-t border-neutral-800/80 animate-fade-in-up">
@@ -18,56 +22,83 @@ const {
   </h2>
 
   <div class="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-    <!-- Interactive Copy Email Button -->
+    <!-- Native Mailto Launch Link (Opens default mail client like Outlook) -->
+    <a
+      href={mailtoUrl}
+      class="text-neutral-400 hover:text-accent transition-colors duration-200 inline-flex items-center gap-1 font-mono"
+    >
+      email
+      <ArrowUpRight class="w-3.5 h-3.5 opacity-60" />
+    </a>
+
+    <!-- Copy Email fallback -->
     <button
       id="copy-email-btn"
       data-email={email}
-      class="group inline-flex items-center gap-1.5 text-neutral-400 hover:text-accent transition-colors duration-200 cursor-pointer font-mono"
+      title="Copy email to clipboard"
+      class="text-xs text-neutral-500 hover:text-neutral-300 font-mono transition-colors cursor-pointer"
     >
-      <span>email</span>
-      <span id="copy-tooltip" class="text-[11px] text-accent opacity-0 transition-opacity duration-200">
-        [copied!]
-      </span>
+      [<span id="copy-label">copy</span>]
     </button>
 
     <a
       href={linkedin}
       target="_blank"
       rel="noopener noreferrer"
-      class="text-neutral-400 hover:text-accent transition-colors duration-200"
+      class="text-neutral-400 hover:text-accent transition-colors duration-200 inline-flex items-center gap-1"
     >
       linkedin
+      <ArrowUpRight class="w-3.5 h-3.5 opacity-60" />
     </a>
 
     <a
       href={github}
       target="_blank"
       rel="noopener noreferrer"
-      class="text-neutral-400 hover:text-accent transition-colors duration-200"
+      class="text-neutral-400 hover:text-accent transition-colors duration-200 inline-flex items-center gap-1"
     >
       github
+      <ArrowUpRight class="w-3.5 h-3.5 opacity-60" />
     </a>
 
     <a
       href="https://github.com/SushiBirb/HyprWpE"
       target="_blank"
       rel="noopener noreferrer"
-      class="text-neutral-400 hover:text-accent transition-colors duration-200"
+      class="text-neutral-400 hover:text-accent transition-colors duration-200 inline-flex items-center gap-1"
     >
       dotfiles
+      <ArrowUpRight class="w-3.5 h-3.5 opacity-60" />
     </a>
   </div>
 
+  <!-- Verified Certifications Footer Bar with Official CompTIA Links -->
   <div class="mt-8 pt-6 border-t border-neutral-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-neutral-400">
-    <div class="flex items-center gap-2">
-      <span class="px-2 py-0.5 rounded bg-accent/10 border border-accent/25 text-accent font-mono text-[11px]">
-        CompTIA Security+
-      </span>
-      <span class="px-2 py-0.5 rounded bg-accent/10 border border-accent/25 text-accent font-mono text-[11px]">
-        CompTIA A+
-      </span>
+    <div class="flex flex-wrap items-center gap-2">
+      <a
+        href="https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1ac4b63ba1ea10c1c"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-accent/10 border border-accent/25 text-accent font-mono text-[11px] hover:border-accent hover:bg-accent/15 transition-all"
+        title="Verify official CompTIA Security+ Credential"
+      >
+        <span>CompTIA Security+ ✓</span>
+        <ArrowUpRight class="w-3 h-3" />
+      </a>
+
+      <a
+        href="https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-accent/10 border border-accent/25 text-accent font-mono text-[11px] hover:border-accent hover:bg-accent/15 transition-all"
+        title="Verify official CompTIA A+ Credential"
+      >
+        <span>CompTIA A+ ✓</span>
+        <ArrowUpRight class="w-3 h-3" />
+      </a>
     </div>
-    <span class="text-neutral-400 font-mono">
+
+    <span class="text-neutral-500 font-mono">
       Joshua Mattingly · © {new Date().getFullYear()}
     </span>
   </div>
@@ -75,16 +106,18 @@ const {
 
 <script>
   const copyBtn = document.getElementById('copy-email-btn');
-  const tooltip = document.getElementById('copy-tooltip');
+  const copyLabel = document.getElementById('copy-label');
 
-  if (copyBtn && tooltip) {
+  if (copyBtn && copyLabel) {
     copyBtn.addEventListener('click', async () => {
       const email = copyBtn.dataset.email || 'jmattingly@proitserv.com';
       try {
         await navigator.clipboard.writeText(email);
-        tooltip.style.opacity = '1';
+        copyLabel.innerText = 'copied!';
+        copyLabel.classList.add('text-accent');
         setTimeout(() => {
-          tooltip.style.opacity = '0';
+          copyLabel.innerText = 'copy';
+          copyLabel.classList.remove('text-accent');
         }, 1800);
       } catch (err) {
         console.error('Failed to copy email:', err);
