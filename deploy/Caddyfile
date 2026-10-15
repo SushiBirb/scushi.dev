@@ -3,8 +3,27 @@
 
 scushi.dev, www.scushi.dev {
     root * /var/www/scushi.dev
-    file_server
     encode zstd gzip
+
+    # Bot Check-in Telemetry Endpoint
+    @bot_checkin {
+        path /api/bot-checkin /api/bot-checkin/*
+    }
+    handle @bot_checkin {
+        reverse_proxy 127.0.0.1:9099
+    }
+
+    # Ensure robots.txt is not aggressively cached by edge CDNs
+    @robots {
+        path /robots.txt
+    }
+    header @robots Cache-Control "no-cache, must-revalidate"
+
+    # Static file fallback routing
+    handle {
+        file_server
+        try_files {path} {path}/ /index.html
+    }
 
     # Security Hardening Headers (ECC Standard)
     header {
@@ -30,9 +49,6 @@ scushi.dev, www.scushi.dev {
         -Server
         -X-Powered-By
     }
-
-    # Static file fallback routing
-    try_files {path} {path}/ /index.html
 
     # Block access to hidden files and git metadata
     @hidden {

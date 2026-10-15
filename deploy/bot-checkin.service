@@ -1,0 +1,13 @@
+[Unit]
+Description=scushi.dev Bot Check-in Telemetry Receiver
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/local/bin/bot-checkin-receiver.py
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
