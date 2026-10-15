@@ -1,0 +1,166 @@
+---
+---
+
+<canvas
+  id="ascii-descent-canvas"
+  class="fixed inset-0 pointer-events-none z-0 w-full h-full select-none"
+  aria-hidden="true"
+></canvas>
+
+<script>
+  function initAsciiDescent() {
+    const canvas = document.getElementById('ascii-descent-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
+    // Grid sizing
+    const charW = 14;
+    const charH = 20;
+    let cols = 0;
+    let rows = 0;
+
+    // Procedural Glyph Sets for the 3 Tiers of Descent
+    // Tier 1: Celestial / Heaven (Airy, serene, geometric light, stars)
+    const heavenGlyphs = ['*', '·', '°', '✦', '~', '^', '+', ':', '·', ' '];
+    const heavenAccents = ['/|\\', '✦', '—*—', '(~)', '.:.', '°˖✧'];
+
+    // Tier 2: The Citadel / Purgatory / System Matrix (Monoliths, wires, logic gates)
+    const purgatoryGlyphs = ['|', '/', '\\', '[', ']', '#', '_', '=', ':', ';', '·', ' '];
+    const purgatoryAccents = ['[|]', '01', '/\\', '#=#', '[_]', '::'];
+
+    // Tier 3: The Abyss / Infernal (Stalagmites, cracked stone, embers, descending spikes)
+    const abyssGlyphs = ['v', '▼', '.', ',', ';', '%', '#', '/', '\\', ' '];
+    const abyssAccents = ['\\▼/', 'vVv', '/\\', '%#%', ':::', '§'];
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx?.scale(dpr, dpr);
+      cols = Math.ceil(width / charW) + 1;
+      rows = Math.ceil(height / charH) + 1;
+    }
+
+    // Pseudo-random deterministic noise based on grid coordinates
+    function pseudoNoise(x: number, y: number): number {
+      const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+      return n - Math.floor(n);
+    }
+
+    let scrollY = window.scrollY;
+    let targetScrollY = window.scrollY;
+    let animationFrameId: number;
+
+    function render(time: number) {
+      // Smooth scroll lerp
+      scrollY += (targetScrollY - scrollY) * 0.1;
+
+      ctx!.clearRect(0, 0, width, height);
+      ctx!.font = '11px "JetBrains Mono", monospace';
+      ctx!.textAlign = 'center';
+      ctx!.textBaseline = 'middle';
+
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = docHeight > 0 ? Math.min(Math.max(scrollY / docHeight, 0), 1) : 0;
+
+      // Parallax scroll offset
+      const parallaxY = scrollY * 0.35;
+      const startRow = Math.floor(parallaxY / charH);
+      const rowOffset = parallaxY % charH;
+
+      const centerX = width / 2;
+      const contentHalfWidth = 400; // max-w-3xl is ~768px
+
+      for (let c = 0; c < cols; c++) {
+        const x = c * charW;
+        const distFromCenter = Math.abs(x - centerX);
+
+        // Center masking: keep the text column ultra-clean and dim, let margins be more atmospheric
+        let columnAlphaMult = 1;
+        if (distFromCenter < contentHalfWidth) {
+          columnAlphaMult = 0.18; // Very faint behind content
+        } else {
+          // Fade in toward outer margins
+          columnAlphaMult = Math.min(0.25 + (distFromCenter - contentHalfWidth) / 250, 0.85);
+        }
+
+        for (let r = 0; r < rows; r++) {
+          const y = r * charH - rowOffset;
+          const globalGridY = startRow + r;
+
+          // Normalized descent depth (0.0 = Pure Heaven at top, 1.0 = Pure Abyss at bottom)
+          // Combining world Y coordinate + scroll percentage
+          const worldDepth = Math.min(
+            Math.max(globalGridY / (rows * 2.2) + scrollPercent * 0.5, 0),
+            1
+          );
+
+          const rand = pseudoNoise(c, globalGridY);
+          const rand2 = pseudoNoise(c + 42, globalGridY + 17);
+
+          // Only draw a glyph if above threshold (keeps background sparse and readable)
+          const densityThreshold = worldDepth < 0.35 ? 0.82 : worldDepth < 0.7 ? 0.79 : 0.76;
+          if (rand < densityThreshold) continue;
+
+          let char = '·';
+          let color = '#ffade4';
+          let baseAlpha = 0.25;
+
+          if (worldDepth < 0.35) {
+            // Zone 1: Celestial / The Heavens
+            char = heavenGlyphs[Math.floor(rand2 * heavenGlyphs.length)];
+            color = rand2 > 0.6 ? '#ffd7ee' : '#ffade4';
+            baseAlpha = 0.22 + Math.sin(time * 0.0015 + c) * 0.08; // Gentle breathing twinkle
+          } else if (worldDepth < 0.7) {
+            // Zone 2: Purgatory / Structural Circuit Citadel
+            char = purgatoryGlyphs[Math.floor(rand2 * purgatoryGlyphs.length)];
+            color = rand2 > 0.5 ? '#ddbecf' : '#888899';
+            baseAlpha = 0.24;
+          } else {
+            // Zone 3: The Abyss / Subterranean / Infernal Descent
+            char = abyssGlyphs[Math.floor(rand2 * abyssGlyphs.length)];
+            color = rand2 > 0.7 ? '#f5b9a1' : '#ffade4';
+            baseAlpha = 0.28 + Math.cos(time * 0.002 + globalGridY) * 0.06; // Embers pulsing
+          }
+
+          const finalAlpha = baseAlpha * columnAlphaMult;
+          if (finalAlpha <= 0.01) continue;
+
+          ctx!.fillStyle = color;
+          ctx!.globalAlpha = finalAlpha;
+          ctx!.fillText(char, x, y);
+        }
+      }
+
+      ctx!.globalAlpha = 1;
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    function onScroll() {
+      targetScrollY = window.scrollY;
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    resize();
+    animationFrameId = requestAnimationFrame(render);
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }
+
+  // Initialize
+  initAsciiDescent();
+  document.addEventListener('astro:page-load', initAsciiDescent);
+</script>
