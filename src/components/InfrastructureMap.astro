@@ -1,202 +1,1027 @@
 ---
-import { Shield, Eye, Network, Server, ArrowRight, Lock, Activity, Database, CheckCircle2 } from 'lucide-astro';
+/**
+ * InfrastructureMap.astro
+ * Interactive Defense & Traffic Topology HUD for scushi.dev (/systems)
+ * Stack: Astro v7, Tailwind CSS v4, JetBrains Mono, Vanilla TS SVG Pathing Engine
+ */
 
-// Architecture Nodes (Obfuscated for Security)
-const nodes = [
+export interface TopologyNode {
+  id: string;
+  name: string;
+  shortLabel: string;
+  tier: 'ingress' | 'core' | 'security' | 'compute';
+  tierLabel: string;
+  badge: string;
+  tech: string;
+  protocol: string;
+  portSpec: string;
+  summary: string;
+  inspectionAction: string;
+  metrics: { label: string; value: string }[];
+}
+
+export interface TopologyEdge {
+  from: string;
+  to: string;
+  label?: string;
+  type: 'primary' | 'telemetry' | 'enforcement';
+}
+
+const nodes: TopologyNode[] = [
   {
     id: 'edge',
     name: 'Zero-Trust Edge Ingress',
-    badge: 'Edge Gateway',
-    tech: 'Cloudflare Tunnel + Caddy TLS',
-    action: 'Ingress Termination',
-    protocol: 'HTTPS / TLS 1.3 / QUIC',
-    summary: 'Public WAN ingress is proxied through an encrypted Cloudflare tunnel directly into Caddy. No public ports are opened on the physical edge router.',
-    connections: ['transit'],
+    shortLabel: 'edge.scushi.dev',
+    tier: 'ingress',
+    tierLabel: '01 // INGRESS TIER',
+    badge: 'INGRESS // L7',
+    tech: 'Cloudflare Tunnel + Caddy TLS 1.3 / QUIC',
+    protocol: 'HTTP/3 / TLS 1.3 / QUIC (UDP 443)',
+    portSpec: '0.0.0.0:443 -> cloudflared.sock',
+    summary:
+      'Outbound-only encrypted Argo tunnels terminate public traffic at Cloudflare edge POPs before reaching local hardware. Zero inbound WAN ports are exposed on the residential gateway; Caddy enforces strict mTLS, HSTS preload, and cryptographic header sanitization.',
+    inspectionAction:
+      'Drops non-SNI handshakes, enforces TLS 1.3 cipher suites, and strips origin metadata before forwarding frames into the WireGuard transit plane.',
+    metrics: [
+      { label: 'WAN Exposure', value: '0 Open Ports' },
+      { label: 'Handshake', value: 'TLS 1.3 / 0-RTT' },
+      { label: 'Tunnel Mode', value: 'Outbound QUIC' },
+    ],
   },
   {
     id: 'transit',
     name: 'Secure Transit Gateway',
-    badge: 'Network Core',
-    tech: 'Linux Gateway & WireGuard Mesh',
-    action: 'Encrypted Routing',
-    protocol: 'Tailscale Mesh Overlay',
-    summary: 'Central virtual transit node routing all inter-container, LAN, and remote endpoint traffic across isolated virtual bridges.',
-    connections: ['dpi', 'ids', 'ips', 'dns'],
+    shortLabel: 'wg0.transit.core',
+    tier: 'core',
+    tierLabel: '02 // NETWORK CORE',
+    badge: 'CORE // L3-L4',
+    tech: 'Tailscale Mesh / WireGuard Kernel / Linux Router',
+    protocol: 'WireGuard (ChaCha20-Poly1305) / IPv4+IPv6',
+    portSpec: 'UDP 41641 / tailscale0 (MTU 1280)',
+    summary:
+      'Kernel-space WireGuard mesh router handling point-to-point encrypted routing, ACL policy enforcement, and packet mirroring. Uses Linux policy routing and port-mirroring rules to tee ingress/egress flows directly into the out-of-band telemetry and IPS pipeline.',
+    inspectionAction:
+      'Authenticates peer cryptographic identities via Tailscale coordination ACLs and mirrors raw L2/L3 packets to ntopng and Maltrail sensors.',
+    metrics: [
+      { label: 'Cipher', value: 'ChaCha20-Poly1305' },
+      { label: 'Routing', value: 'Kernel netfilter' },
+      { label: 'Port Mirror', value: 'tc mirred -> span0' },
+    ],
   },
   {
     id: 'dpi',
     name: 'ntopng & nDPI Analyzer',
-    badge: 'Flow Telemetry',
-    tech: 'nDPI + Redis Cache',
-    action: 'Layer 2–7 Deep Inspection',
-    protocol: 'L7 Protocol Analytics',
-    summary: 'Inspects packet payloads in real-time, classifying Layer 7 protocols, tracking network flows, and alerting on protocol anomalies.',
-    connections: ['dns'],
+    shortLabel: 'dpi.telemetry',
+    tier: 'security',
+    tierLabel: '03 // SECURITY & TELEMETRY PIPELINE',
+    badge: 'TELEMETRY // L2-L7',
+    tech: 'ntopng Enterprise / nDPI Engine + Redis Cache',
+    protocol: 'SPAN Mirror / NetFlow v9 / L7 Signatures',
+    portSpec: 'promisc:span0 -> redis://127.0.0.1:6379',
+    summary:
+      'Real-time deep packet inspection dissecting over 350+ L7 application protocols regardless of port assignment. Extracts JA3/JA4 TLS client fingerprints, tracks lateral bandwidth anomalies, and correlates anomalous DNS lookups with AdGuard Home.',
+    inspectionAction:
+      'Inspects mirrored payload headers to classify encrypted application flows, flagging anomalous JA4 fingerprints and unapproved DoH bypass attempts.',
+    metrics: [
+      { label: 'Inspection', value: 'Layer 2 – Layer 7' },
+      { label: 'State Store', value: 'Redis In-Memory' },
+      { label: 'Fingerprinting', value: 'JA3 / JA4 TLS' },
+    ],
   },
   {
     id: 'ids',
     name: 'Maltrail Threat IDS',
-    badge: 'Intrusion Detection',
-    tech: 'Deep Heuristic Engine',
-    action: 'C2 Beaconing Detection',
-    protocol: 'Threat Feeds & IOC Matching',
-    summary: 'Scans network flows for known Command & Control (C2) beaconing patterns, malicious domain lookups, and suspicious outbound ports.',
-    connections: ['ips'],
+    shortLabel: 'ids.maltrail',
+    tier: 'security',
+    tierLabel: '03 // SECURITY & TELEMETRY PIPELINE',
+    badge: 'IDS // HEURISTIC',
+    tech: 'Maltrail Sensor + Heuristic C2 Detection Engine',
+    protocol: 'Raw PCAP Socket / Threat Intel Feeds',
+    portSpec: 'pcap:span0 -> udp://127.0.0.1:8337',
+    summary:
+      'Lightweight traffic sensor comparing live packet headers, SNI domains, and HTTP URI paths against aggregated open-source threat intelligence trails and heuristic rulesets designed to catch C2 beaconing, DGA domains, and mass scanners.',
+    inspectionAction:
+      'Detects Cobalt Strike/Sliver beacon jitter, suspicious User-Agents, and known malicious IPs, emitting structured alert logs directly to CrowdSec.',
+    metrics: [
+      { label: 'Detection', value: 'Static + Heuristic' },
+      { label: 'Focus', value: 'C2 & DGA Trails' },
+      { label: 'Feed Sync', value: 'Automated Daily' },
+    ],
   },
   {
     id: 'ips',
-    name: 'CrowdSec IPS (v1.8.1)',
-    badge: 'Active Defense',
-    tech: 'Kernel Bouncers (nftables)',
-    action: 'Automated IP Remediation',
-    protocol: 'Global Threat Mesh Consensus',
-    summary: 'Behavioral detection engine that ingests system logs and immediately triggers kernel-level firewall drops for aggressive scanning or brute-force behavior.',
-    connections: ['dns', 'cluster'],
+    name: 'CrowdSec IPS v1.8.1',
+    shortLabel: 'ips.crowdsec',
+    tier: 'security',
+    tierLabel: '03 // SECURITY & TELEMETRY PIPELINE',
+    badge: 'IPS // ENFORCER',
+    tech: 'CrowdSec Engine v1.8.1 + nftables Kernel Bouncer',
+    protocol: 'LAPI (HTTP/TLS) -> Linux nf_tables',
+    portSpec: 'lapi:8080 -> nft set crowdsec-blacklists',
+    summary:
+      'Behavioral intrusion prevention engine parsing telemetry from Caddy, Maltrail, and SSH/system journals. Evaluates leaky-bucket scenarios to identify brute-force, L7 crawlers, and CVE exploitation, executing sub-millisecond kernel drops via nftables.',
+    inspectionAction:
+      'Translates behavioral alerts and Maltrail hits into active kernel-level IP/CIDR bans (`nftables drop`) before packets can reach downstream workloads.',
+    metrics: [
+      { label: 'Engine', value: 'CrowdSec v1.8.1' },
+      { label: 'Bouncer', value: 'Kernel nftables' },
+      { label: 'Verdict Latency', value: '< 0.5ms Drop' },
+    ],
   },
   {
     id: 'dns',
     name: 'AdGuard Home Sinkhole',
-    badge: 'DNS Privacy',
-    tech: 'Authoritative DHCP + Recursive DoH',
-    action: 'Threat & Telemetry Filtering',
-    protocol: 'DNS-over-HTTPS / HaGeZi Pro',
-    summary: 'All internal and remote DNS requests are resolved recursively over encrypted DoH while dropping telemetry, adware, and known malicious domains at the gateway.',
-    connections: ['cluster'],
+    shortLabel: 'dns.sinkhole',
+    tier: 'security',
+    tierLabel: '03 // SECURITY & TELEMETRY PIPELINE',
+    badge: 'DNS // SINKHOLE',
+    tech: 'Authoritative DHCP + Recursive DoH (HaGeZi Pro)',
+    protocol: 'DNS-over-HTTPS / DNS-over-TLS / DNSSEC',
+    portSpec: 'UDP/TCP 53, TCP 853 -> Quad9/Cloudflare DoH',
+    summary:
+      'Centralized DNS authority and network-wide sinkhole enforcing HaGeZi Pro, Threat Intel, and anti-tracker blocklists. Prevents unencrypted upstream DNS leakage by forcing all local LXC containers through validated DNSSEC DoH upstreams.',
+    inspectionAction:
+      'Null-routes known telemetry, phishing, and C2 domains (`0.0.0.0` / `NXDOMAIN`) while providing split-horizon records for internal Proxmox services.',
+    metrics: [
+      { label: 'Blocklist', value: 'HaGeZi Pro + TIF' },
+      { label: 'Upstream', value: 'Encrypted DoH/DoT' },
+      { label: 'Validation', value: 'Strict DNSSEC' },
+    ],
   },
   {
     id: 'cluster',
     name: 'Proxmox Virtual Cluster',
-    badge: 'Hypervisor Host',
-    tech: 'Isolated Virtual Containers',
-    action: 'Privilege Isolation',
-    protocol: 'Multi-Core Virtualization',
-    summary: 'Hardware hypervisor hosting segregated containerized network daemons, databases, and services within dedicated kernel namespaces.',
-    connections: ['storage'],
+    shortLabel: 'pve01.cluster',
+    tier: 'compute',
+    tierLabel: '04 // CORE HOST & STORAGE TIER',
+    badge: 'COMPUTE // LXC',
+    tech: 'Proxmox VE 8 + Unprivileged Debian LXC Namespaces',
+    protocol: 'Linux Bridge (vmbr0) / AppArmor / cgroups v2',
+    portSpec: 'vmbr0 (VLAN Aware) -> LXC veth pairs',
+    summary:
+      'Hardened hypervisor layer running unprivileged Debian 12 LXC containers and isolated KVM workloads. Every service runs inside dedicated UID/GID kernel namespaces with strict AppArmor profiles, Proxmox host firewall rules, and least-privilege resource quotas.',
+    inspectionAction:
+      'Isolates application runtimes via kernel namespaces (`cgroups v2` + `seccomp`) so a compromise in one web service cannot pivot laterally.',
+    metrics: [
+      { label: 'Hypervisor', value: 'Proxmox VE 8.x' },
+      { label: 'Isolation', value: 'Unprivileged LXC' },
+      { label: 'MAC Policy', value: 'AppArmor Enforced' },
+    ],
   },
   {
     id: 'storage',
-    name: 'CouchDB Replication',
-    badge: 'Encrypted Vault',
-    tech: 'Apache CouchDB 3.5.2',
-    action: 'Continuous Bidirectional Sync',
-    protocol: 'Encrypted REST / HTTP2',
-    summary: 'Zero-latency multi-client database replicating academic, security, and technical vaults continuously across workstations and mobile endpoints.',
-    connections: [],
+    name: 'CouchDB Replication Engine',
+    shortLabel: 'db.couch.vault',
+    tier: 'compute',
+    tierLabel: '04 // CORE HOST & STORAGE TIER',
+    badge: 'STORAGE // VAULT',
+    tech: 'Apache CouchDB 3.5.2 + E2EE Replication Vault',
+    protocol: 'HTTPS / Erlang Distribution / AES-256-GCM',
+    portSpec: '127.0.0.1:5984 -> ZFS Encrypted Dataset',
+    summary:
+      'Multi-master document replication engine backing Obsidian LiveSync and persistent infrastructure state. Payloads are client-side encrypted with AES-256-GCM prior to transmission, ensuring the database tier only ever stores opaque ciphertext chunks.',
+    inspectionAction:
+      'Persists deduplicated, content-addressed ciphertext revisions onto ZFS datasets with automated cryptographic scrubbing and snapshot retention.',
+    metrics: [
+      { label: 'Engine', value: 'CouchDB 3.5.2' },
+      { label: 'Payload', value: 'Client E2EE (AES)' },
+      { label: 'Consistency', value: 'MVCC Replication' },
+    ],
   },
 ];
+
+const edges: TopologyEdge[] = [
+  { from: 'edge', to: 'transit', label: 'QUIC / mTLS', type: 'primary' },
+  { from: 'transit', to: 'dpi', label: 'SPAN Mirror', type: 'telemetry' },
+  { from: 'transit', to: 'ids', label: 'PCAP Tap', type: 'telemetry' },
+  { from: 'transit', to: 'ips', label: 'L3 Forward', type: 'primary' },
+  { from: 'transit', to: 'dns', label: 'UDP/53 + DoT', type: 'primary' },
+  { from: 'dpi', to: 'dns', label: 'Flow Audit', type: 'telemetry' },
+  { from: 'ids', to: 'ips', label: 'Alert Signal', type: 'enforcement' },
+  { from: 'ips', to: 'dns', label: 'Sinkhole Sync', type: 'enforcement' },
+  { from: 'ips', to: 'cluster', label: 'Scrubbed L3/L4', type: 'primary' },
+  { from: 'dns', to: 'cluster', label: 'Split-DNS', type: 'primary' },
+  { from: 'cluster', to: 'storage', label: 'Local Loopback', type: 'primary' },
+];
+
+const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
 ---
 
-<div class="rounded-xl border border-neutral-800/80 bg-neutral-900/30 p-5 space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-4">
-    <div>
-      <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-        <Activity class="w-5 h-5 text-accent" />
-        Interactive Defense & Traffic Topology
-      </h3>
-      <p class="text-xs text-neutral-400 mt-0.5">
-        Click or hover any node to inspect traffic flow, security inspection layers, and protocols.
-      </p>
+<section
+  class="infra-topology-root relative w-full font-mono text-zinc-200 select-none"
+  aria-label="Interactive Defense and Traffic Topology"
+  data-nodes={JSON.stringify(nodes)}
+  data-edges={JSON.stringify(edges)}
+>
+  <!-- Top System Telemetry Bar -->
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border border-white/[0.08] bg-[#0e0e11] px-4 py-2.5 text-xs">
+    <div class="flex items-center gap-3">
+      <span class="relative flex h-2 w-2">
+        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ffade4] opacity-75"></span>
+        <span class="relative inline-flex h-2 w-2 rounded-full bg-[#ffade4]"></span>
+      </span>
+      <span class=" tracking-widest text-zinc-300 uppercase">
+        TOPOLOGY // <span class="text-[#ffade4]">SCUSHI-SEC-PIPELINE</span>
+      </span>
+      <span class="hidden text-zinc-600 sm:inline">|</span>
+      <span class="hidden text-zinc-400 sm:inline">8 NODES // 11 DIRECTED CONDUITS</span>
     </div>
-    <div class="flex items-center gap-2 text-xs font-mono text-neutral-400">
-      <span class="inline-block w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-      <span>topology: live inspection</span>
-    </div>
-  </div>
 
-  <!-- Interactive Node Grid Flow -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-    {nodes.map((n, i) => (
+    <div class="flex items-center gap-4 text-[11px] text-zinc-400">
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block h-2 w-2 rounded-full bg-[#ffade4]"></span>
+        <span>Active Conduit</span>
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block h-2 w-2 rounded-full border border-[#ffade4]/50 bg-[#ffade4]/10"></span>
+        <span>Upstream / Downstream</span>
+      </span>
       <button
         type="button"
-        data-node-id={n.id}
-        data-node-name={n.name}
-        data-node-tech={n.tech}
-        data-node-badge={n.badge}
-        data-node-action={n.action}
-        data-node-protocol={n.protocol}
-        data-node-summary={n.summary}
-        class={`topo-node text-left rounded-lg p-3.5 border transition-all duration-200 cursor-pointer ${
-          i === 0
-            ? 'bg-neutral-900/90 border-accent/40 shadow-sm'
-            : 'bg-neutral-950/70 border-neutral-800/80 hover:border-accent/30'
-        }`}
+        data-reset-topology
+        class="cursor-pointer rounded border border-white/[0.08] bg-white/[0.02] px-2 py-0.5 text-[10px] tracking-wider text-zinc-300 uppercase transition hover:border-[#ffade4]/50 hover:text-[#ffade4]"
       >
-        <div class="flex items-center justify-between text-xs mb-1.5">
-          <span class="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold">{n.badge}</span>
-          <span class="text-[10px] font-mono text-neutral-500">step 0{i + 1}</span>
-        </div>
-        <h4 class="text-sm font-semibold text-white group-hover:text-accent transition-colors">{n.name}</h4>
-        <p class="text-[11px] text-neutral-400 mt-1 line-clamp-1">{n.tech}</p>
+        Reset Lock
       </button>
-    ))}
+    </div>
   </div>
 
-  <!-- Dynamic Node Inspector Detail Card -->
-  <div id="inspector-card" class="rounded-lg bg-neutral-950/80 border border-neutral-800 p-4 transition-all duration-300">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-800/70 pb-3 mb-3">
+  <!-- Interactive Topology Canvas Container -->
+  <div
+    data-topology-stage
+    class="relative overflow-hidden rounded-b-lg border border-t-0 border-white/[0.08] bg-[#0e0e11] p-4 sm:p-6 lg:p-8"
+  >
+    <!-- Subtle Tactical Grid Backdrop -->
+    <div
+      class="pointer-events-none absolute inset-0 opacity-25"
+      style="background-image: radial-gradient(rgba(255, 173, 228, 0.16) 1px, transparent 1px), linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 24px 24px, 48px 48px, 48px 48px;"
+    ></div>
+
+    <!-- Dynamic SVG Conduit & Packet Layer -->
+    <svg
+      data-topology-svg
+      class="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible"
+      aria-hidden="true"
+    >
+      <defs>
+        <!-- Soft Neon Glow Filter for Active Conduits -->
+        <filter id="conduit-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <!-- Directed Arrowhead Markers -->
+        <marker
+          id="arrow-idle"
+          viewBox="0 0 10 10"
+          refX="7"
+          refY="5"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="rgba(255, 255, 255, 0.22)" />
+        </marker>
+
+        <marker
+          id="arrow-active"
+          viewBox="0 0 10 10"
+          refX="7"
+          refY="5"
+          markerWidth="5.5"
+          markerHeight="5.5"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#ffade4" />
+        </marker>
+      </defs>
+
+      <!-- Dynamically populated by ResizeObserver engine -->
+      <g data-svg-edges-base></g>
+      <g data-svg-edges-pulse></g>
+      <g data-svg-ports></g>
+    </svg>
+
+    <!-- HTML Node Tiers Layer -->
+    <div class="relative z-20 flex flex-col gap-10 lg:gap-14">
+      
+      <!-- TIER 1: INGRESS TIER -->
+      <div class="relative">
+        <div class="mb-2.5 flex items-center gap-2">
+          <span class="text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
+            01 // Ingress Tier
+          </span>
+          <div class="h-px flex-1 bg-white/[0.06]"></div>
+          <span class="text-[10px] text-zinc-600">DMZ / ZERO-TRUST PERIMETER</span>
+        </div>
+
+        <div class="grid grid-cols-1 place-items-center">
+          {
+            [nodeMap['edge']].map((node) => (
+              <button
+                type="button"
+                data-node-id={node.id}
+                aria-pressed="true"
+                class="topology-node group relative w-full max-w-md cursor-pointer rounded-md border border-white/[0.08] bg-[#131318]/90 p-3.5 text-left transition-all duration-200 focus:outline-none"
+              >
+                <span data-port-in class="node-port node-port-top" />
+                <span data-port-out class="node-port node-port-bottom" />
+
+                <div class="mb-1.5 flex items-center justify-between gap-2">
+                  <span class="rounded border border-[#ffade4]/30 bg-[#ffade4]/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wider text-[#ffade4]">
+                    {node.badge}
+                  </span>
+                  <span class="text-[11px] text-zinc-500 group-hover:text-zinc-300">
+                    [{node.shortLabel}]
+                  </span>
+                </div>
+
+                <div class="text-sm font-semibold text-zinc-100 group-hover:text-[#ffade4]">
+                  {node.name}
+                </div>
+                <div class="mt-1 truncate text-[11px] text-zinc-400">
+                  {node.tech}
+                </div>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- TIER 2: NETWORK CORE -->
+      <div class="relative">
+        <div class="mb-2.5 flex items-center gap-2">
+          <span class="text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
+            02 // Network Core
+          </span>
+          <div class="h-px flex-1 bg-white/[0.06]"></div>
+          <span class="text-[10px] text-zinc-600">KERNEL ROUTING & PACKET TEE</span>
+        </div>
+
+        <div class="grid grid-cols-1 place-items-center">
+          {
+            [nodeMap['transit']].map((node) => (
+              <button
+                type="button"
+                data-node-id={node.id}
+                aria-pressed="false"
+                class="topology-node group relative w-full max-w-md cursor-pointer rounded-md border border-white/[0.08] bg-[#131318]/90 p-3.5 text-left transition-all duration-200 focus:outline-none"
+              >
+                <span data-port-in class="node-port node-port-top" />
+                <span data-port-out class="node-port node-port-bottom" />
+
+                <div class="mb-1.5 flex items-center justify-between gap-2">
+                  <span class="rounded border border-[#ffade4]/30 bg-[#ffade4]/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wider text-[#ffade4]">
+                    {node.badge}
+                  </span>
+                  <span class="text-[11px] text-zinc-500 group-hover:text-zinc-300">
+                    [{node.shortLabel}]
+                  </span>
+                </div>
+
+                <div class="text-sm font-semibold text-zinc-100 group-hover:text-[#ffade4]">
+                  {node.name}
+                </div>
+                <div class="mt-1 truncate text-[11px] text-zinc-400">
+                  {node.tech}
+                </div>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- TIER 3: SECURITY & TELEMETRY PIPELINE -->
+      <div class="relative pb-4 lg:pb-7">
+        <div class="mb-2.5 flex items-center gap-2">
+          <span class="text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
+            03 // Security & Telemetry Pipeline
+          </span>
+          <div class="h-px flex-1 bg-white/[0.06]"></div>
+          <span class="text-[10px] text-zinc-600">OUT-OF-BAND DPI + INLINE IPS/DNS</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+          {
+            ['dpi', 'ids', 'ips', 'dns'].map((id) => {
+              const node = nodeMap[id];
+              return (
+                <button
+                  type="button"
+                  data-node-id={node.id}
+                  aria-pressed="false"
+                  class="topology-node group relative w-full cursor-pointer rounded-md border border-white/[0.08] bg-[#131318]/90 p-3.5 text-left transition-all duration-200 focus:outline-none"
+                >
+                  <span data-port-in class="node-port node-port-top" />
+                  <span data-port-out class="node-port node-port-bottom" />
+
+                  <div class="mb-1.5 flex items-center justify-between gap-1.5">
+                    <span class="rounded border border-[#ffade4]/30 bg-[#ffade4]/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wider text-[#ffade4]">
+                      {node.badge}
+                    </span>
+                    <span class="truncate text-[10px] text-zinc-500 group-hover:text-zinc-300">
+                      [{node.shortLabel}]
+                    </span>
+                  </div>
+
+                  <div class="text-xs font-semibold text-zinc-100 sm:text-sm group-hover:text-[#ffade4]">
+                    {node.name}
+                  </div>
+                  <div class="mt-1 line-clamp-1 text-[11px] text-zinc-400">
+                    {node.tech}
+                  </div>
+                </button>
+              );
+            })
+          }
+        </div>
+      </div>
+
+      <!-- TIER 4: CORE HOST & STORAGE TIER -->
+      <div class="relative">
+        <div class="mb-2.5 flex items-center gap-2">
+          <span class="text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">
+            04 // Core Host & Storage Tier
+          </span>
+          <div class="h-px flex-1 bg-white/[0.06]"></div>
+          <span class="text-[10px] text-zinc-600">ISOLATED LXC WORKLOADS & E2EE VAULT</span>
+        </div>
+
+        <div class="mx-auto grid max-w-3xl grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-12">
+          {
+            ['cluster', 'storage'].map((id) => {
+              const node = nodeMap[id];
+              return (
+                <button
+                  type="button"
+                  data-node-id={node.id}
+                  aria-pressed="false"
+                  class="topology-node group relative w-full cursor-pointer rounded-md border border-white/[0.08] bg-[#131318]/90 p-3.5 text-left transition-all duration-200 focus:outline-none"
+                >
+                  <span data-port-in class="node-port node-port-top" />
+                  <span data-port-out class="node-port node-port-bottom" />
+
+                  <div class="mb-1.5 flex items-center justify-between gap-2">
+                    <span class="rounded border border-[#ffade4]/30 bg-[#ffade4]/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wider text-[#ffade4]">
+                      {node.badge}
+                    </span>
+                    <span class="text-[11px] text-zinc-500 group-hover:text-zinc-300">
+                      [{node.shortLabel}]
+                    </span>
+                  </div>
+
+                  <div class="text-sm font-semibold text-zinc-100 group-hover:text-[#ffade4]">
+                    {node.name}
+                  </div>
+                  <div class="mt-1 truncate text-[11px] text-zinc-400">
+                    {node.tech}
+                  </div>
+                </button>
+              );
+            })
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Inspector HUD Card (Synchronized with Active/Pinned Node) -->
+  <div
+    data-inspector-hud
+    class="mt-4 rounded-lg border border-white/[0.08] bg-[#0e0e11] p-5 sm:p-6"
+    aria-live="polite"
+  >
+    <div class="flex flex-col justify-between gap-4 border-b border-white/[0.08] pb-4 lg:flex-row lg:items-center">
       <div>
-        <div class="flex items-center gap-2">
-          <h4 id="inspect-name" class="text-base font-semibold text-white">Zero-Trust Edge Ingress</h4>
-          <span id="inspect-badge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-accent/10 border border-accent/25 text-accent">
-            Edge Gateway
+        <div class="flex flex-wrap items-center gap-2.5">
+          <span
+            data-hud-badge
+            class="rounded border border-[#ffade4]/40 bg-[#ffade4]/15 px-2 py-0.5 text-xs font-semibold tracking-wider text-[#ffade4]"
+          >
+            {nodes[0].badge}
+          </span>
+          <span data-hud-tier class="text-xs tracking-widest text-zinc-500 uppercase">
+            {nodes[0].tierLabel}
+          </span>
+          <span
+            data-hud-mode-pill
+            class="rounded bg-white/[0.04] px-2 py-0.5 text-[10px] tracking-wider text-zinc-400 uppercase"
+          >
+            PINNED SELECTION
           </span>
         </div>
-        <p id="inspect-tech" class="text-xs text-neutral-400 mt-0.5 font-mono">Cloudflare Tunnel + Caddy TLS</p>
+        <h3 data-hud-name class="mt-2 text-lg font-bold text-zinc-100 sm:text-xl">
+          {nodes[0].name}
+        </h3>
       </div>
 
-      <div class="flex items-center gap-2 font-mono text-xs text-neutral-300">
-        <span class="text-neutral-500">Protocol:</span>
-        <span id="inspect-protocol" class="text-accent">HTTPS / TLS 1.3 / QUIC</span>
+      <!-- Node Telemetry Mini-Metrics -->
+      <div data-hud-metrics class="grid grid-cols-3 gap-2 sm:gap-3">
+        {
+          nodes[0].metrics.map((m) => (
+            <div class="rounded border border-white/[0.06] bg-white/[0.02] px-3 py-1.5">
+              <div class="text-[10px] tracking-wider text-zinc-500 uppercase">{m.label}</div>
+              <div class="mt-0.5 text-xs font-semibold text-[#ffade4]">{m.value}</div>
+            </div>
+          ))
+        }
       </div>
     </div>
 
-    <p id="inspect-summary" class="text-xs text-neutral-300 leading-relaxed">
-      Public WAN ingress is proxied through an encrypted Cloudflare tunnel directly into Caddy. No public ports are opened on the physical edge router.
-    </p>
+    <!-- Technical Specs & Summary Grid -->
+    <div class="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <!-- Left Column: Stack, Protocol, Socket -->
+      <div class="space-y-3 lg:col-span-5">
+        <div class="rounded border border-white/[0.06] bg-[#131318]/60 p-3">
+          <div class="text-[10px] tracking-widest text-zinc-500 uppercase">SYSTEM STACK // ENGINE</div>
+          <div data-hud-tech class="mt-1 text-xs font-medium text-zinc-200">
+            {nodes[0].tech}
+          </div>
+        </div>
 
-    <div class="mt-3.5 pt-3 border-t border-neutral-800/70 flex items-center justify-between text-xs font-mono">
-      <span class="text-neutral-500">Inspection Action:</span>
-      <span id="inspect-action" class="text-neutral-200 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded">
-        Ingress Termination
-      </span>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <div class="rounded border border-white/[0.06] bg-[#131318]/60 p-3">
+            <div class="text-[10px] tracking-widest text-zinc-500 uppercase">TRANSPORT & PROTOCOL</div>
+            <div data-hud-protocol class="mt-1 text-xs text-zinc-300">
+              {nodes[0].protocol}
+            </div>
+          </div>
+
+          <div class="rounded border border-white/[0.06] bg-[#131318]/60 p-3">
+            <div class="text-[10px] tracking-widest text-zinc-500 uppercase">INTERFACE BINDING</div>
+            <div data-hud-portspec class="mt-1 text-xs text-[#ffade4]/90">
+              {nodes[0].portSpec}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Architectural Summary & Enforcement Action -->
+      <div class="flex flex-col justify-between space-y-4 lg:col-span-7">
+        <div>
+          <div class="text-[10px] tracking-widest text-zinc-500 uppercase">ARCHITECTURAL ROLE</div>
+          <p data-hud-summary class="mt-1.5 text-xs leading-relaxed text-zinc-300 sm:text-sm">
+            {nodes[0].summary}
+          </p>
+        </div>
+
+        <div class="rounded border border-[#ffade4]/25 bg-[#ffade4]/[0.04] p-3.5">
+          <div class="flex items-center gap-2 text-[10px] font-semibold tracking-widest text-[#ffade4] uppercase">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-[#ffade4]"></span>
+            <span>PACKET INSPECTION & ENFORCEMENT ACTION</span>
+          </div>
+          <p data-hud-action class="mt-1.5 text-xs leading-relaxed text-zinc-200">
+            {nodes[0].inspectionAction}
+          </p>
+        </div>
+
+        <!-- Live Connected Neighbours Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] pt-3 text-[11px]">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-zinc-500 uppercase">UPSTREAM IN:</span>
+            <div data-hud-upstream class="flex flex-wrap gap-1.5"></div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-zinc-500 uppercase">DOWNSTREAM OUT:</span>
+            <div data-hud-downstream class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</section>
+
+<style>
+  /* Anchor ports on top and bottom center of each node card */
+  .node-port {
+    position: absolute;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    border-radius: 9999px;
+    background-color: #18181f;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  .node-port-top {
+    top: -4.5px;
+  }
+
+  .node-port-bottom {
+    bottom: -4.5px;
+  }
+
+  /* Node visual states controlled via data-state attribute */
+  .topology-node[data-state='active'] {
+    border-color: #ffade4;
+    background-color: rgba(255, 173, 228, 0.07);
+    box-shadow:
+      0 0 0 1px rgba(255, 173, 228, 0.25),
+      0 0 28px -6px rgba(255, 173, 228, 0.28);
+  }
+
+  .topology-node[data-state='active'] .node-port {
+    background-color: #ffade4;
+    border-color: #ffade4;
+    box-shadow: 0 0 10px #ffade4;
+    transform: scale(1.25);
+  }
+
+  .topology-node[data-state='connected'] {
+    border-color: rgba(255, 173, 228, 0.45);
+    background-color: rgba(255, 173, 228, 0.03);
+  }
+
+  .topology-node[data-state='connected'] .node-port {
+    border-color: #ffade4;
+    background-color: #261722;
+  }
+
+  .topology-node[data-state='dimmed'] {
+    opacity: 0.35;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Conduit SVG Path Animations */
+  :global(.conduit-base) {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.13);
+    stroke-width: 1.5px;
+    transition:
+      stroke 220ms ease,
+      stroke-width 220ms ease,
+      opacity 220ms ease;
+  }
+
+  :global(.conduit-base[data-edge-state='active']) {
+    stroke: rgba(255, 173, 228, 0.55);
+    stroke-width: 2px;
+    opacity: 1;
+  }
+
+  :global(.conduit-base[data-edge-state='dimmed']) {
+    opacity: 0.14;
+  }
+
+  /* Animated Glowing Packet Pulse Overlay */
+  :global(.conduit-pulse) {
+    fill: none;
+    stroke: #ffade4;
+    stroke-width: 2.2px;
+    stroke-linecap: round;
+    stroke-dasharray: 10 110;
+    opacity: 0.22;
+    animation: packetFlow 3.2s linear infinite;
+    transition:
+      opacity 220ms ease,
+      stroke-width 220ms ease;
+  }
+
+  :global(.conduit-pulse[data-edge-state='active']) {
+    opacity: 1;
+    stroke-width: 2.6px;
+    stroke-dasharray: 18 95;
+    animation-duration: 1.8s;
+  }
+
+  :global(.conduit-pulse[data-edge-state='dimmed']) {
+    opacity: 0.04;
+  }
+
+  @keyframes packetFlow {
+    from {
+      stroke-dashoffset: 240;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.conduit-pulse) {
+      animation: none;
+      stroke-dasharray: none;
+    }
+  }
+</style>
 
 <script>
-  function setupInfrastructureMap() {
-    const nodeButtons = document.querySelectorAll<HTMLButtonElement>('.topo-node');
-    const inspectName = document.getElementById('inspect-name');
-    const inspectBadge = document.getElementById('inspect-badge');
-    const inspectTech = document.getElementById('inspect-tech');
-    const inspectProtocol = document.getElementById('inspect-protocol');
-    const inspectSummary = document.getElementById('inspect-summary');
-    const inspectAction = document.getElementById('inspect-action');
+  interface TopologyNode {
+    id: string;
+    name: string;
+    shortLabel: string;
+    tier: string;
+    tierLabel: string;
+    badge: string;
+    tech: string;
+    protocol: string;
+    portSpec: string;
+    summary: string;
+    inspectionAction: string;
+    metrics: { label: string; value: string }[];
+  }
 
-    nodeButtons.forEach((btn) => {
-      if (btn.dataset.listenerAttached === 'true') return;
-      btn.dataset.listenerAttached = 'true';
+  interface TopologyEdge {
+    from: string;
+    to: string;
+    label?: string;
+    type: string;
+  }
 
-      btn.addEventListener('click', () => {
-        // Highlight active button
-        nodeButtons.forEach((b) => {
-          b.classList.remove('bg-neutral-900/90', 'border-accent/40');
-          b.classList.add('bg-neutral-950/70', 'border-neutral-800/80');
+  function initInfrastructureTopologies() {
+    const roots = document.querySelectorAll<HTMLElement>('.infra-topology-root');
+
+    roots.forEach((root) => {
+      // Avoid duplicate initialization across Astro page transitions
+      if (root.dataset.initialized === 'true') return;
+      root.dataset.initialized = 'true';
+
+      const nodes: TopologyNode[] = JSON.parse(root.dataset.nodes || '[]');
+      const edges: TopologyEdge[] = JSON.parse(root.dataset.edges || '[]');
+      const nodeLookup = new Map<string, TopologyNode>(nodes.map((n) => [n.id, n]));
+
+      const stage = root.querySelector<HTMLElement>('[data-topology-stage]');
+      const svg = root.querySelector<SVGSVGElement>('[data-topology-svg]');
+      const baseGroup = root.querySelector<SVGGElement>('[data-svg-edges-base]');
+      const pulseGroup = root.querySelector<SVGGElement>('[data-svg-edges-pulse]');
+      const resetBtn = root.querySelector<HTMLButtonElement>('[data-reset-topology]');
+      const nodeElements = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-node-id]'));
+
+      // HUD Elements
+      const hudBadge = root.querySelector<HTMLElement>('[data-hud-badge]');
+      const hudTier = root.querySelector<HTMLElement>('[data-hud-tier]');
+      const hudModePill = root.querySelector<HTMLElement>('[data-hud-mode-pill]');
+      const hudName = root.querySelector<HTMLElement>('[data-hud-name]');
+      const hudTech = root.querySelector<HTMLElement>('[data-hud-tech]');
+      const hudProtocol = root.querySelector<HTMLElement>('[data-hud-protocol]');
+      const hudPortSpec = root.querySelector<HTMLElement>('[data-hud-portspec]');
+      const hudSummary = root.querySelector<HTMLElement>('[data-hud-summary]');
+      const hudAction = root.querySelector<HTMLElement>('[data-hud-action]');
+      const hudMetrics = root.querySelector<HTMLElement>('[data-hud-metrics]');
+      const hudUpstream = root.querySelector<HTMLElement>('[data-hud-upstream]');
+      const hudDownstream = root.querySelector<HTMLElement>('[data-hud-downstream]');
+
+      if (!stage || !svg || !baseGroup || !pulseGroup) return;
+
+      let pinnedNodeId: string = 'edge';
+      let hoveredNodeId: string | null = null;
+
+      /**
+       * Computes smooth cubic Bezier SVG path strings between source and target DOM nodes.
+       * - Vertical hierarchy connections route bottom-port -> top-port.
+       * - Same-row lateral connections (e.g. dpi->dns, ids->ips, ips->dns) route via an
+       *   under-slung telemetry bus arc so lines never cut across sibling node cards.
+       */
+      function computeConduitPath(fromEl: HTMLElement, toEl: HTMLElement, stageRect: DOMRect): string {
+        const fromOutPort = fromEl.querySelector<HTMLElement>('[data-port-out]') || fromEl;
+        const toInPort = toEl.querySelector<HTMLElement>('[data-port-in]') || toEl;
+        const toOutPort = toEl.querySelector<HTMLElement>('[data-port-out]') || toEl;
+
+        const r1 = fromOutPort.getBoundingClientRect();
+        const r2In = toInPort.getBoundingClientRect();
+        const r2Out = toOutPort.getBoundingClientRect();
+
+        const x1 = r1.left + r1.width / 2 - stageRect.left;
+        const y1 = r1.top + r1.height / 2 - stageRect.top;
+
+        const x2Top = r2In.left + r2In.width / 2 - stageRect.left;
+        const y2Top = r2In.top + r2In.height / 2 - stageRect.top;
+
+        // Check if source and target sit on the same horizontal row (lateral intra-tier link)
+        const fromCardRect = fromEl.getBoundingClientRect();
+        const toCardRect = toEl.getBoundingClientRect();
+        const isSameHorizontalRow = Math.abs(fromCardRect.top - toCardRect.top) < 28;
+
+        if (isSameHorizontalRow) {
+          const x2Bottom = r2Out.left + r2Out.width / 2 - stageRect.left;
+          const y2Bottom = r2Out.top + r2Out.height / 2 - stageRect.top;
+          const horizontalSpan = Math.abs(x2Bottom - x1);
+          // Scale arc depth slightly by span so dpi->dns clears ids->ips cleanly
+          const arcDepth = horizontalSpan > 320 ? 36 : 22;
+
+          return `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${x1.toFixed(1)} ${(y1 + arcDepth).toFixed(1)}, ${x2Bottom.toFixed(1)} ${(y2Bottom + arcDepth).toFixed(1)}, ${x2Bottom.toFixed(1)} ${y2Bottom.toFixed(1)}`;
+        }
+
+        // Standard vertical hierarchical S-curve
+        const dy = Math.max(Math.abs(y2Top - y1) * 0.52, 24);
+        return `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${x1.toFixed(1)} ${(y1 + dy).toFixed(1)}, ${x2Top.toFixed(1)} ${(y2Top - dy).toFixed(1)}, ${x2Top.toFixed(1)} ${y2Top.toFixed(1)}`;
+      }
+
+      /**
+       * Renders or updates SVG paths for all directed edges
+       */
+      function renderAllConduits() {
+        if (!stage || !baseGroup || !pulseGroup) return;
+        const stageRect = stage.getBoundingClientRect();
+
+        baseGroup.innerHTML = '';
+        pulseGroup.innerHTML = '';
+
+        edges.forEach((edge, idx) => {
+          const fromEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.from}"]`);
+          const toEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.to}"]`);
+          if (!fromEl || !toEl) return;
+
+          const d = computeConduitPath(fromEl, toEl, stageRect);
+
+          // Base structural conduit line
+          const basePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          basePath.setAttribute('d', d);
+          basePath.setAttribute('class', 'conduit-base');
+          basePath.setAttribute('data-from', edge.from);
+          basePath.setAttribute('data-to', edge.to);
+          basePath.setAttribute('marker-end', 'url(#arrow-idle)');
+          baseGroup.appendChild(basePath);
+
+          // Animated glowing packet pulse line
+          const pulsePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          pulsePath.setAttribute('d', d);
+          pulsePath.setAttribute('class', 'conduit-pulse');
+          pulsePath.setAttribute('data-from', edge.from);
+          pulsePath.setAttribute('data-to', edge.to);
+          pulsePath.setAttribute('filter', 'url(#conduit-glow)');
+          // Stagger animation phase so pulses feel organic
+          pulsePath.style.animationDelay = `${(idx * -0.35).toFixed(2)}s`;
+          pulseGroup.appendChild(pulsePath);
         });
-        btn.classList.remove('bg-neutral-950/70', 'border-neutral-800/80');
-        btn.classList.add('bg-neutral-900/90', 'border-accent/40');
 
-        // Update inspector card details
-        if (inspectName) inspectName.innerText = btn.dataset.nodeName || '';
-        if (inspectBadge) inspectBadge.innerText = btn.dataset.nodeBadge || '';
-        if (inspectTech) inspectTech.innerText = btn.dataset.nodeTech || '';
-        if (inspectProtocol) inspectProtocol.innerText = btn.dataset.nodeProtocol || '';
-        if (inspectSummary) inspectSummary.innerText = btn.dataset.nodeSummary || '';
-        if (inspectAction) inspectAction.innerText = btn.dataset.nodeAction || '';
+        applyFocusState();
+      }
+
+      /**
+       * Synchronizes visual highlights on nodes, SVG conduits, and the Inspector HUD card
+       */
+      function applyFocusState() {
+        const activeId = hoveredNodeId || pinnedNodeId;
+        const isPreview = hoveredNodeId !== null && hoveredNodeId !== pinnedNodeId;
+
+        const connectedNodes = new Set<string>([activeId]);
+        const upstreamIds: string[] = [];
+        const downstreamIds: string[] = [];
+
+        edges.forEach((e) => {
+          if (e.from === activeId) {
+            connectedNodes.add(e.to);
+            downstreamIds.push(e.to);
+          }
+          if (e.to === activeId) {
+            connectedNodes.add(e.from);
+            upstreamIds.push(e.from);
+          }
+        });
+
+        // 1. Update HTML Node Cards
+        nodeElements.forEach((el) => {
+          const id = el.dataset.nodeId!;
+          el.setAttribute('aria-pressed', String(id === pinnedNodeId));
+
+          if (id === activeId) {
+            el.dataset.state = 'active';
+          } else if (connectedNodes.has(id)) {
+            el.dataset.state = 'connected';
+          } else {
+            el.dataset.state = 'dimmed';
+          }
+        });
+
+        // 2. Update SVG Base & Pulse Paths
+        const basePaths = baseGroup!.querySelectorAll<SVGPathElement>('path');
+        const pulsePaths = pulseGroup!.querySelectorAll<SVGPathElement>('path');
+
+        basePaths.forEach((path, i) => {
+          const from = path.dataset.from;
+          const to = path.dataset.to;
+          const isDirectEdge = from === activeId || to === activeId;
+          const pulse = pulsePaths[i];
+
+          if (isDirectEdge) {
+            path.dataset.edgeState = 'active';
+            path.setAttribute('marker-end', 'url(#arrow-active)');
+            if (pulse) pulse.dataset.edgeState = 'active';
+          } else {
+            path.dataset.edgeState = 'dimmed';
+            path.setAttribute('marker-end', 'url(#arrow-idle)');
+            if (pulse) pulse.dataset.edgeState = 'dimmed';
+          }
+        });
+
+        // 3. Synchronize Inspector HUD Card
+        const activeNode = nodeLookup.get(activeId);
+        if (!activeNode) return;
+
+        if (hudBadge) hudBadge.textContent = activeNode.badge;
+        if (hudTier) hudTier.textContent = activeNode.tierLabel;
+        if (hudModePill) {
+          hudModePill.textContent = isPreview ? 'HOVER PREVIEW' : 'PINNED SELECTION';
+          hudModePill.className = isPreview
+            ? 'rounded border border-[#ffade4]/40 bg-[#ffade4]/10 px-2 py-0.5 text-[10px] tracking-wider text-[#ffade4] uppercase'
+            : 'rounded bg-white/[0.04] px-2 py-0.5 text-[10px] tracking-wider text-zinc-400 uppercase';
+        }
+        if (hudName) hudName.textContent = activeNode.name;
+        if (hudTech) hudTech.textContent = activeNode.tech;
+        if (hudProtocol) hudProtocol.textContent = activeNode.protocol;
+        if (hudPortSpec) hudPortSpec.textContent = activeNode.portSpec;
+        if (hudSummary) hudSummary.textContent = activeNode.summary;
+        if (hudAction) hudAction.textContent = activeNode.inspectionAction;
+
+        if (hudMetrics) {
+          hudMetrics.innerHTML = activeNode.metrics
+            .map(
+              (m) => `
+              <div class="rounded border border-white/[0.06] bg-white/[0.02] px-3 py-1.5">
+                <div class="text-[10px] tracking-wider text-zinc-500 uppercase">${m.label}</div>
+                <div class="mt-0.5 text-xs font-semibold text-[#ffade4]">${m.value}</div>
+              </div>
+            `
+            )
+            .join('');
+        }
+
+        // Render clickable upstream/downstream chips inside the HUD
+        const renderChipList = (ids: string[], emptyLabel: string) => {
+          if (ids.length === 0) {
+            return `<span class="text-zinc-600">${emptyLabel}</span>`;
+          }
+          return ids
+            .map((id) => {
+              const n = nodeLookup.get(id);
+              return `<button type="button" data-hud-jump="${id}" class="cursor-pointer rounded border border-[#ffade4]/30 bg-[#ffade4]/10 px-2 py-0.5 text-[10px] text-[#ffade4] transition hover:bg-[#ffade4]/20">[${n ? n.shortLabel : id}]</button>`;
+            })
+            .join('');
+        };
+
+        if (hudUpstream) {
+          hudUpstream.innerHTML = renderChipList(upstreamIds, 'EXTERNAL WAN ORIGIN');
+        }
+        if (hudDownstream) {
+          hudDownstream.innerHTML = renderChipList(downstreamIds, 'TERMINAL VAULT');
+        }
+      }
+
+      // Bind Node Click & Hover Listeners
+      nodeElements.forEach((btn) => {
+        const id = btn.dataset.nodeId!;
+
+        btn.addEventListener('click', () => {
+          pinnedNodeId = id;
+          hoveredNodeId = null;
+          applyFocusState();
+        });
+
+        btn.addEventListener('mouseenter', () => {
+          hoveredNodeId = id;
+          applyFocusState();
+        });
+
+        btn.addEventListener('mouseleave', () => {
+          hoveredNodeId = null;
+          applyFocusState();
+        });
       });
+
+      // Allow jumping between nodes directly from the HUD Upstream/Downstream badges
+      root.addEventListener('click', (e) => {
+        const target = (e.target as HTMLElement).closest<HTMLElement>('[data-hud-jump]');
+        if (!target) return;
+        const jumpId = target.dataset.hudJump;
+        if (jumpId && nodeLookup.has(jumpId)) {
+          pinnedNodeId = jumpId;
+          hoveredNodeId = null;
+          applyFocusState();
+        }
+      });
+
+      // Reset button restores default `edge` lock
+      resetBtn?.addEventListener('click', () => {
+        pinnedNodeId = 'edge';
+        hoveredNodeId = null;
+        applyFocusState();
+      });
+
+      // Responsive ResizeObserver keeps SVG conduits locked to HTML ports on any screen size
+      const resizeObserver = new ResizeObserver(() => {
+        window.requestAnimationFrame(renderAllConduits);
+      });
+      resizeObserver.observe(stage);
+
+      // Initial draw
+      renderAllConduits();
     });
   }
 
-  setupInfrastructureMap();
-  document.addEventListener('astro:page-load', setupInfrastructureMap);
+  // Compatible with both standard page loads and Astro's <ClientRouter />
+  document.addEventListener('astro:page-load', initInfrastructureTopologies);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInfrastructureTopologies);
+  } else {
+    initInfrastructureTopologies();
+  }
 </script>
