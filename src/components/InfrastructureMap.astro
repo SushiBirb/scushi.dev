@@ -264,15 +264,6 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
       aria-hidden="true"
     >
       <defs>
-        <!-- Soft Neon Glow Filter for Active Conduits -->
-        <filter id="conduit-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-
         <!-- Directed Arrowhead Markers -->
         <marker
           id="arrow-idle"
@@ -301,8 +292,6 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
       <!-- Dynamically populated by ResizeObserver engine -->
       <g data-svg-edges-base></g>
-      <g data-svg-edges-pulse></g>
-      <g data-svg-ports></g>
     </svg>
 
     <!-- HTML Node Tiers Layer -->
@@ -650,66 +639,26 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
     border-color: rgba(255, 255, 255, 0.05);
   }
 
-  /* Conduit SVG Path Animations */
+  /* Conduit SVG Path Styles - Clean Static Vectors */
   :global(.conduit-base) {
     fill: none;
-    stroke: rgba(255, 255, 255, 0.13);
+    stroke: rgba(255, 255, 255, 0.16);
     stroke-width: 1.5px;
     transition:
-      stroke 220ms ease,
-      stroke-width 220ms ease,
-      opacity 220ms ease;
+      stroke 200ms ease,
+      stroke-width 200ms ease,
+      opacity 200ms ease;
   }
 
   :global(.conduit-base[data-edge-state='active']) {
-    stroke: rgba(255, 173, 228, 0.55);
+    stroke: #ffade4;
     stroke-width: 2px;
     opacity: 1;
   }
 
   :global(.conduit-base[data-edge-state='dimmed']) {
-    opacity: 0.14;
-  }
-
-  /* Animated Glowing Packet Pulse Overlay */
-  :global(.conduit-pulse) {
-    fill: none;
-    stroke: #ffade4;
-    stroke-width: 2.2px;
-    stroke-linecap: round;
-    stroke-dasharray: 10 110;
-    opacity: 0.22;
-    animation: packetFlow 3.2s linear infinite;
-    transition:
-      opacity 220ms ease,
-      stroke-width 220ms ease;
-  }
-
-  :global(.conduit-pulse[data-edge-state='active']) {
-    opacity: 1;
-    stroke-width: 2.6px;
-    stroke-dasharray: 18 95;
-    animation-duration: 1.8s;
-  }
-
-  :global(.conduit-pulse[data-edge-state='dimmed']) {
-    opacity: 0.04;
-  }
-
-  @keyframes packetFlow {
-    from {
-      stroke-dashoffset: 240;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :global(.conduit-pulse) {
-      animation: none;
-      stroke-dasharray: none;
-    }
+    stroke: rgba(255, 255, 255, 0.08);
+    opacity: 0.2;
   }
 </style>
 
@@ -751,7 +700,6 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
       const stage = root.querySelector<HTMLElement>('[data-topology-stage]');
       const svg = root.querySelector<SVGSVGElement>('[data-topology-svg]');
       const baseGroup = root.querySelector<SVGGElement>('[data-svg-edges-base]');
-      const pulseGroup = root.querySelector<SVGGElement>('[data-svg-edges-pulse]');
       const resetBtn = root.querySelector<HTMLButtonElement>('[data-reset-topology]');
       const nodeElements = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-node-id]'));
 
@@ -769,7 +717,7 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
       const hudUpstream = root.querySelector<HTMLElement>('[data-hud-upstream]');
       const hudDownstream = root.querySelector<HTMLElement>('[data-hud-downstream]');
 
-      if (!stage || !svg || !baseGroup || !pulseGroup) return;
+      if (!stage || !svg || !baseGroup) return;
 
       let pinnedNodeId: string = 'edge';
       let hoveredNodeId: string | null = null;
@@ -819,39 +767,35 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
        * Renders or updates SVG paths for all directed edges
        */
       function renderAllConduits() {
-        if (!stage || !baseGroup || !pulseGroup) return;
+        if (!stage || !baseGroup) return;
         const stageRect = stage.getBoundingClientRect();
 
-        baseGroup.innerHTML = '';
-        pulseGroup.innerHTML = '';
+        const existingPaths = baseGroup.querySelectorAll<SVGPathElement>('path');
+        if (existingPaths.length === edges.length) {
+          edges.forEach((edge, idx) => {
+            const fromEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.from}"]`);
+            const toEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.to}"]`);
+            if (!fromEl || !toEl) return;
+            const d = computeConduitPath(fromEl, toEl, stageRect);
+            existingPaths[idx].setAttribute('d', d);
+          });
+        } else {
+          baseGroup.innerHTML = '';
+          edges.forEach((edge) => {
+            const fromEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.from}"]`);
+            const toEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.to}"]`);
+            if (!fromEl || !toEl) return;
 
-        edges.forEach((edge, idx) => {
-          const fromEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.from}"]`);
-          const toEl = root.querySelector<HTMLElement>(`[data-node-id="${edge.to}"]`);
-          if (!fromEl || !toEl) return;
-
-          const d = computeConduitPath(fromEl, toEl, stageRect);
-
-          // Base structural conduit line
-          const basePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          basePath.setAttribute('d', d);
-          basePath.setAttribute('class', 'conduit-base');
-          basePath.setAttribute('data-from', edge.from);
-          basePath.setAttribute('data-to', edge.to);
-          basePath.setAttribute('marker-end', 'url(#arrow-idle)');
-          baseGroup.appendChild(basePath);
-
-          // Animated glowing packet pulse line
-          const pulsePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          pulsePath.setAttribute('d', d);
-          pulsePath.setAttribute('class', 'conduit-pulse');
-          pulsePath.setAttribute('data-from', edge.from);
-          pulsePath.setAttribute('data-to', edge.to);
-          pulsePath.setAttribute('filter', 'url(#conduit-glow)');
-          // Stagger animation phase so pulses feel organic
-          pulsePath.style.animationDelay = `${(idx * -0.35).toFixed(2)}s`;
-          pulseGroup.appendChild(pulsePath);
-        });
+            const d = computeConduitPath(fromEl, toEl, stageRect);
+            const basePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            basePath.setAttribute('d', d);
+            basePath.setAttribute('class', 'conduit-base');
+            basePath.setAttribute('data-from', edge.from);
+            basePath.setAttribute('data-to', edge.to);
+            basePath.setAttribute('marker-end', 'url(#arrow-idle)');
+            baseGroup.appendChild(basePath);
+          });
+        }
 
         applyFocusState();
       }
@@ -892,24 +836,19 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
           }
         });
 
-        // 2. Update SVG Base & Pulse Paths
+        // 2. Update SVG Base Paths (Static Crisp Highlights)
         const basePaths = baseGroup!.querySelectorAll<SVGPathElement>('path');
-        const pulsePaths = pulseGroup!.querySelectorAll<SVGPathElement>('path');
-
-        basePaths.forEach((path, i) => {
+        basePaths.forEach((path) => {
           const from = path.dataset.from;
           const to = path.dataset.to;
           const isDirectEdge = from === activeId || to === activeId;
-          const pulse = pulsePaths[i];
 
           if (isDirectEdge) {
             path.dataset.edgeState = 'active';
             path.setAttribute('marker-end', 'url(#arrow-active)');
-            if (pulse) pulse.dataset.edgeState = 'active';
           } else {
             path.dataset.edgeState = 'dimmed';
             path.setAttribute('marker-end', 'url(#arrow-idle)');
-            if (pulse) pulse.dataset.edgeState = 'dimmed';
           }
         });
 
@@ -1007,8 +946,17 @@ const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
       });
 
       // Responsive ResizeObserver keeps SVG conduits locked to HTML ports on any screen size
-      const resizeObserver = new ResizeObserver(() => {
-        window.requestAnimationFrame(renderAllConduits);
+      let prevWidth = 0;
+      let prevHeight = 0;
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (Math.abs(width - prevWidth) > 1 || Math.abs(height - prevHeight) > 1) {
+            prevWidth = width;
+            prevHeight = height;
+            window.requestAnimationFrame(renderAllConduits);
+          }
+        }
       });
       resizeObserver.observe(stage);
 
