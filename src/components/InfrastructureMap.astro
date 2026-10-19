@@ -164,31 +164,39 @@ const nodes = [
 </div>
 
 <script>
-  const nodeButtons = document.querySelectorAll<HTMLButtonElement>('.topo-node');
-  const inspectName = document.getElementById('inspect-name');
-  const inspectBadge = document.getElementById('inspect-badge');
-  const inspectTech = document.getElementById('inspect-tech');
-  const inspectProtocol = document.getElementById('inspect-protocol');
-  const inspectSummary = document.getElementById('inspect-summary');
-  const inspectAction = document.getElementById('inspect-action');
+  function setupInfrastructureMap() {
+    const nodeButtons = document.querySelectorAll<HTMLButtonElement>('.topo-node');
+    const inspectName = document.getElementById('inspect-name');
+    const inspectBadge = document.getElementById('inspect-badge');
+    const inspectTech = document.getElementById('inspect-tech');
+    const inspectProtocol = document.getElementById('inspect-protocol');
+    const inspectSummary = document.getElementById('inspect-summary');
+    const inspectAction = document.getElementById('inspect-action');
 
-  nodeButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      // Highlight active button
-      nodeButtons.forEach((b) => {
-        b.classList.remove('bg-neutral-900/90', 'border-accent/40');
-        b.classList.add('bg-neutral-950/70', 'border-neutral-800/80');
+    nodeButtons.forEach((btn) => {
+      if (btn.dataset.listenerAttached === 'true') return;
+      btn.dataset.listenerAttached = 'true';
+
+      btn.addEventListener('click', () => {
+        // Highlight active button
+        nodeButtons.forEach((b) => {
+          b.classList.remove('bg-neutral-900/90', 'border-accent/40');
+          b.classList.add('bg-neutral-950/70', 'border-neutral-800/80');
+        });
+        btn.classList.remove('bg-neutral-950/70', 'border-neutral-800/80');
+        btn.classList.add('bg-neutral-900/90', 'border-accent/40');
+
+        // Update inspector card details
+        if (inspectName) inspectName.innerText = btn.dataset.nodeName || '';
+        if (inspectBadge) inspectBadge.innerText = btn.dataset.nodeBadge || '';
+        if (inspectTech) inspectTech.innerText = btn.dataset.nodeTech || '';
+        if (inspectProtocol) inspectProtocol.innerText = btn.dataset.nodeProtocol || '';
+        if (inspectSummary) inspectSummary.innerText = btn.dataset.nodeSummary || '';
+        if (inspectAction) inspectAction.innerText = btn.dataset.nodeAction || '';
       });
-      btn.classList.remove('bg-neutral-950/70', 'border-neutral-800/80');
-      btn.classList.add('bg-neutral-900/90', 'border-accent/40');
-
-      // Update inspector card details
-      if (inspectName) inspectName.innerText = btn.dataset.nodeName || '';
-      if (inspectBadge) inspectBadge.innerText = btn.dataset.nodeBadge || '';
-      if (inspectTech) inspectTech.innerText = btn.dataset.nodeTech || '';
-      if (inspectProtocol) inspectProtocol.innerText = btn.dataset.nodeProtocol || '';
-      if (inspectSummary) inspectSummary.innerText = btn.dataset.nodeSummary || '';
-      if (inspectAction) inspectAction.innerText = btn.dataset.nodeAction || '';
     });
-  });
+  }
+
+  setupInfrastructureMap();
+  document.addEventListener('astro:page-load', setupInfrastructureMap);
 </script>

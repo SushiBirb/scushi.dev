@@ -14,6 +14,7 @@ const isSystems = pathname === '/systems';
     <a
       href="/"
       id="nav-home"
+      data-astro-prefetch="hover"
       class={`py-1.5 px-2 sm:px-0 transition-colors duration-200 ${
         isHome ? 'text-accent font-semibold' : 'text-neutral-400 hover:text-accent'
       }`}
@@ -22,7 +23,8 @@ const isSystems = pathname === '/systems';
     </a>
 
     <a
-      href="/projects"
+      href="/projects/"
+      data-astro-prefetch="hover"
       class={`py-1.5 px-2 sm:px-0 transition-colors duration-200 ${
         isProjects ? 'text-accent font-semibold' : 'text-neutral-400 hover:text-accent'
       }`}
@@ -31,7 +33,8 @@ const isSystems = pathname === '/systems';
     </a>
 
     <a
-      href="/systems"
+      href="/systems/"
+      data-astro-prefetch="hover"
       class={`py-1.5 px-2 sm:px-0 transition-colors duration-200 ${
         isSystems ? 'text-accent font-semibold' : 'text-neutral-400 hover:text-accent'
       }`}
@@ -53,14 +56,21 @@ const isSystems = pathname === '/systems';
 
 <script>
   // If clicking Home while already on Home, scroll smoothly to the very top
-  const homeLink = document.getElementById('nav-home');
-  if (homeLink) {
-    homeLink.addEventListener('click', (e) => {
-      const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-      if (currentPath === '/') {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    });
+  function setupNavHome() {
+    const homeLink = document.getElementById('nav-home');
+    if (homeLink) {
+      if (homeLink.dataset.listenerAttached === 'true') return;
+      homeLink.dataset.listenerAttached = 'true';
+      homeLink.addEventListener('click', (e) => {
+        const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+        if (currentPath === '/') {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
   }
+
+  setupNavHome();
+  document.addEventListener('astro:page-load', setupNavHome);
 </script>

@@ -37,9 +37,17 @@ const { text, as: Tag = 'span', class: className = '' } = Astro.props;
     }, 25);
   }
 
-  // Auto-scramble on page mount
-  document.querySelectorAll<HTMLElement>('.scramble-text').forEach((el) => {
-    scramble(el);
-    el.addEventListener('mouseenter', () => scramble(el));
-  });
+  // Auto-scramble on page mount and client-side page load
+  function initScramble() {
+    document.querySelectorAll<HTMLElement>('.scramble-text').forEach((el) => {
+      scramble(el);
+      if (el.dataset.scrambleAttached !== 'true') {
+        el.dataset.scrambleAttached = 'true';
+        el.addEventListener('mouseenter', () => scramble(el));
+      }
+    });
+  }
+
+  initScramble();
+  document.addEventListener('astro:page-load', initScramble);
 </script>

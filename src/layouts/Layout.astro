@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import AsciiSpotlight from '../components/AsciiSpotlight.astro';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title?: string;
@@ -31,30 +32,39 @@ const {
     <meta property="og:description" content={description} />
     <meta property="og:url" content="https://scushi.dev" />
     <meta name="theme-color" content="#ffade4" />
+
+    <ClientRouter />
   </head>
   <body class="min-h-screen bg-[var(--color-canvas)] text-neutral-200 font-mono antialiased selection:bg-accent selection:text-neutral-950 relative overflow-x-hidden">
     <!-- ASCII descent matrix illuminated strictly inside the cursor spotlight -->
     <AsciiSpotlight />
 
     <!-- Subtle, toned-down cursor spotlight (25% original diameter: 160px) -->
-    <div id="pointer-spotlight" class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-500"></div>
+    <div id="pointer-spotlight" transition:persist class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-500"></div>
 
     <div class="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-16">
       <slot />
     </div>
 
     <script>
+      import { navigate } from 'astro:transitions/client';
+
       // Subtle cursor spotlight (toned down to 160px radius)
-      const spotlight = document.getElementById('pointer-spotlight');
-      if (spotlight && window.matchMedia('(pointer: fine)').matches) {
-        window.addEventListener('mousemove', (e) => {
-          spotlight.style.opacity = '1';
-          spotlight.style.background = `radial-gradient(160px circle at ${e.clientX}px ${e.clientY}px, rgba(255, 173, 228, 0.06), transparent 85%)`;
-        });
-        window.addEventListener('mouseleave', () => {
-          spotlight.style.opacity = '0';
-        });
+      function initPointerSpotlight() {
+        const spotlight = document.getElementById('pointer-spotlight');
+        if (spotlight && window.matchMedia('(pointer: fine)').matches) {
+          window.addEventListener('mousemove', (e) => {
+            spotlight.style.opacity = '1';
+            spotlight.style.background = `radial-gradient(160px circle at ${e.clientX}px ${e.clientY}px, rgba(255, 173, 228, 0.06), transparent 85%)`;
+          });
+          window.addEventListener('mouseleave', () => {
+            spotlight.style.opacity = '0';
+          });
+        }
       }
+
+      initPointerSpotlight();
+      document.addEventListener('astro:page-load', initPointerSpotlight);
 
       // Universal keyboard shortcuts: [h], [p], [s]
       window.addEventListener('keydown', (e) => {
@@ -69,21 +79,21 @@ const {
           if (currentPath === '/' || currentPath === '') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
-            window.location.href = '/';
+            navigate('/');
           }
         } else if (key === 'p') {
           e.preventDefault();
           if (currentPath === '/projects') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
-            window.location.href = '/projects';
+            navigate('/projects/');
           }
         } else if (key === 's') {
           e.preventDefault();
           if (currentPath === '/systems') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
-            window.location.href = '/systems';
+            navigate('/systems/');
           }
         }
       });

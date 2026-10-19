@@ -59,3 +59,26 @@ This document outlines the security rules to enforce Cloudflare Managed Challeng
 For admin interfaces (`proxmox.scushi.dev`, etc.):
 1. In Cloudflare Zero Trust (**Access** -> **Applications**), create an Access Application.
 2. Set policy to require GitHub OAuth or email one-time PIN (OTP) before granting connection access.
+
+---
+
+## 5. Edge Cache Rule for Static Pages (Instant Page Loads)
+
+1. In the Cloudflare Dashboard, select `scushi.dev`.
+2. In the left navigation, navigate to **Caching** -> **Cache Rules**.
+3. Click **Create rule**.
+4. Configure the rule:
+   - **Rule Name:** `Edge Cache Static HTML and Pages`
+   - **When incoming requests match:**
+     ```text
+     (http.host eq "scushi.dev" and http.request.uri.path in {"/" "/projects/" "/systems/"})
+     ```
+   - **Cache eligibility:** Select **Eligible for cache**.
+   - **Edge TTL:** Select **Use cache-control header if present, use default TTL if not** or **Override origin** -> **2 hours**.
+   - **Browser TTL:** **Respect origin** (or **4 hours**).
+5. Click **Deploy**.
+
+**Effect:**
+- Cloudflare Edge caches the pre-rendered static HTML at nearest edge nodes.
+- Eliminates origin round-trips over the Cloudflare Tunnel for HTML documents.
+

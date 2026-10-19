@@ -3,6 +3,7 @@
 
 <canvas
   id="ascii-spotlight-canvas"
+  transition:persist
   class="fixed inset-0 pointer-events-none z-0 w-full h-full select-none"
   aria-hidden="true"
 ></canvas>
@@ -180,6 +181,15 @@
     };
   }
 
-  initAsciiSpotlight();
-  document.addEventListener('astro:page-load', initAsciiSpotlight);
+  let initialized = false;
+  function startAsciiSpotlight() {
+    const canvas = document.getElementById('ascii-spotlight-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    if (initialized) return;
+    initAsciiSpotlight();
+    initialized = true;
+  }
+
+  startAsciiSpotlight();
+  document.addEventListener('astro:page-load', startAsciiSpotlight);
 </script>

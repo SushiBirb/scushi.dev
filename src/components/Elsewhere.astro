@@ -115,23 +115,31 @@ const mailtoUrl = `mailto:${email}?subject=Hello%20from%20scushi.dev`;
 </section>
 
 <script>
-  const copyBtn = document.getElementById('copy-email-btn');
-  const copyLabel = document.getElementById('copy-label');
+  function setupCopyEmail() {
+    const copyBtn = document.getElementById('copy-email-btn');
+    const copyLabel = document.getElementById('copy-label');
 
-  if (copyBtn && copyLabel) {
-    copyBtn.addEventListener('click', async () => {
-      const email = copyBtn.dataset.email || 'jmattingly@proitserv.com';
-      try {
-        await navigator.clipboard.writeText(email);
-        copyLabel.innerText = 'copied!';
-        copyLabel.classList.add('text-accent');
-        setTimeout(() => {
-          copyLabel.innerText = 'copy';
-          copyLabel.classList.remove('text-accent');
-        }, 1800);
-      } catch (err) {
-        console.error('Failed to copy email:', err);
-      }
-    });
+    if (copyBtn && copyLabel) {
+      if (copyBtn.dataset.listenerAttached === 'true') return;
+      copyBtn.dataset.listenerAttached = 'true';
+
+      copyBtn.addEventListener('click', async () => {
+        const email = copyBtn.dataset.email || 'jmattingly@proitserv.com';
+        try {
+          await navigator.clipboard.writeText(email);
+          copyLabel.innerText = 'copied!';
+          copyLabel.classList.add('text-accent');
+          setTimeout(() => {
+            copyLabel.innerText = 'copy';
+            copyLabel.classList.remove('text-accent');
+          }, 1800);
+        } catch (err) {
+          console.error('Failed to copy email:', err);
+        }
+      });
+    }
   }
+
+  setupCopyEmail();
+  document.addEventListener('astro:page-load', setupCopyEmail);
 </script>
