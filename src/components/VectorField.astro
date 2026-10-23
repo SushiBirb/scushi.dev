@@ -128,12 +128,12 @@
         ctx!.moveTo(x1, y1);
         ctx!.lineTo(x2, y2);
 
-        // Color shifts from muted autumn cocoa to vivid amber near cursor
+        // Color shifts from muted autumn russet to vivid orange near cursor
         if (mouseProximity > 0.4) {
-          ctx!.strokeStyle = `rgba(255, 222, 171, ${finalAlpha})`; // #ffdeab highlight
+          ctx!.strokeStyle = `rgba(244, 157, 92, ${finalAlpha})`; // #f49d5c highlight
           ctx!.lineWidth = 1.6;
         } else {
-          ctx!.strokeStyle = `rgba(227, 194, 141, ${finalAlpha})`; // #e3c28d accent
+          ctx!.strokeStyle = `rgba(224, 122, 56, ${finalAlpha})`; // #e07a38 accent
           ctx!.lineWidth = 1.1;
         }
 
@@ -144,7 +144,7 @@
         if (mouseProximity > 0.15) {
           ctx!.beginPath();
           ctx!.arc(x2, y2, 1.2, 0, Math.PI * 2);
-          ctx!.fillStyle = `rgba(255, 173, 228, ${finalAlpha * 1.3})`;
+          ctx!.fillStyle = `rgba(244, 157, 92, ${finalAlpha * 1.3})`;
           ctx!.fill();
         }
       }

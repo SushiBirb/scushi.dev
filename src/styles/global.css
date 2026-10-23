@@ -6,13 +6,13 @@
 
 @theme {
   --font-mono: "JetBrains Mono", monospace;
-  --color-accent: #e3c28d;
-  --color-accent-light: #ffdeab;
-  --color-accent-peach: #ffb3b1;
-  --color-accent-muted: #e6bdbb;
-  --color-canvas: #131313;
-  --color-surface: #1a1616;
-  --color-surface-hover: #262121;
+  --color-accent: #e07a38;
+  --color-accent-light: #f49d5c;
+  --color-accent-peach: #eb967a;
+  --color-accent-muted: #c47551;
+  --color-canvas: #12100f;
+  --color-surface: #1c1715;
+  --color-surface-hover: #28201d;
   --color-border-subtle: rgba(255, 255, 255, 0.08);
 }
 
@@ -28,8 +28,8 @@ html {
 }
 
 ::selection {
-  background-color: #e3c28d;
-  color: #131313;
+  background-color: #e07a38;
+  color: #12100f;
 }
 
 /* Crisp text accent - no outside blurry glow */
