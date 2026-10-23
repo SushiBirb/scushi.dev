@@ -110,23 +110,23 @@
           if (rand < densityThreshold) continue;
 
           let char = '·';
-          let color = '#ffade4';
+          let color = '#e3c28d';
           let baseAlpha = 0.25;
 
           if (worldDepth < 0.35) {
             // Zone 1: Celestial / The Heavens
             char = heavenGlyphs[Math.floor(rand2 * heavenGlyphs.length)];
-            color = rand2 > 0.6 ? '#ffd7ee' : '#ffade4';
+            color = rand2 > 0.6 ? '#ffdeab' : '#e3c28d';
             baseAlpha = 0.22 + Math.sin(time * 0.0015 + c) * 0.08; // Gentle breathing twinkle
           } else if (worldDepth < 0.7) {
             // Zone 2: Purgatory / Structural Circuit Citadel
             char = purgatoryGlyphs[Math.floor(rand2 * purgatoryGlyphs.length)];
-            color = rand2 > 0.5 ? '#ddbecf' : '#888899';
+            color = rand2 > 0.5 ? '#e6bdbb' : '#888899';
             baseAlpha = 0.24;
           } else {
             // Zone 3: The Abyss / Subterranean / Infernal Descent
             char = abyssGlyphs[Math.floor(rand2 * abyssGlyphs.length)];
-            color = rand2 > 0.7 ? '#f5b9a1' : '#ffade4';
+            color = rand2 > 0.7 ? '#ffb3b1' : '#e3c28d';
             baseAlpha = 0.28 + Math.cos(time * 0.002 + globalGridY) * 0.06; // Embers pulsing
           }
 

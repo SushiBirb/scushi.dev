@@ -128,12 +128,12 @@
         ctx!.moveTo(x1, y1);
         ctx!.lineTo(x2, y2);
 
-        // Color shifts from muted rose to vivid accent pink near cursor
+        // Color shifts from muted autumn cocoa to vivid amber near cursor
         if (mouseProximity > 0.4) {
-          ctx!.strokeStyle = `rgba(255, 215, 238, ${finalAlpha})`; // #ffd7ee highlight
+          ctx!.strokeStyle = `rgba(255, 222, 171, ${finalAlpha})`; // #ffdeab highlight
           ctx!.lineWidth = 1.6;
         } else {
-          ctx!.strokeStyle = `rgba(255, 173, 228, ${finalAlpha})`; // #ffade4 accent
+          ctx!.strokeStyle = `rgba(227, 194, 141, ${finalAlpha})`; // #e3c28d accent
           ctx!.lineWidth = 1.1;
         }
 

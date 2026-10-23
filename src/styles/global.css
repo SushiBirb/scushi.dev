@@ -6,13 +6,13 @@
 
 @theme {
   --font-mono: "JetBrains Mono", monospace;
-  --color-accent: #ffade4;
-  --color-accent-light: #ffd7ee;
-  --color-accent-peach: #f5b9a1;
-  --color-accent-muted: #ddbecf;
-  --color-canvas: #0e0e11;
-  --color-surface: #141418;
-  --color-surface-hover: #1c1c22;
+  --color-accent: #e3c28d;
+  --color-accent-light: #ffdeab;
+  --color-accent-peach: #ffb3b1;
+  --color-accent-muted: #e6bdbb;
+  --color-canvas: #131313;
+  --color-surface: #1a1616;
+  --color-surface-hover: #262121;
   --color-border-subtle: rgba(255, 255, 255, 0.08);
 }
 
@@ -28,7 +28,7 @@ html {
 }
 
 ::selection {
-  background-color: #ffade4;
+  background-color: #e3c28d;
   color: #131313;
 }
 
@@ -72,7 +72,7 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0e0e11;
+  background: #131313;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -81,5 +81,5 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffade4;
+  background: #e3c28d;
 }

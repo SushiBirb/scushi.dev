@@ -119,20 +119,20 @@
             const normMatrix = wMatrix / totalW;
 
             let char = '·';
-            let color = '#ffade4';
+            let color = '#e3c28d';
 
             if (rand3 < normHeaven) {
               // Sampled from Celestial palette
               char = heavenGlyphs[Math.floor(rand2 * heavenGlyphs.length)];
-              color = rand2 > 0.5 ? '#ffd7ee' : '#ffade4'; // Airy ethereal highlight
+              color = rand2 > 0.5 ? '#ffdeab' : '#e3c28d'; // Airy warm golden highlight
             } else if (rand3 < normHeaven + normMatrix) {
               // Sampled from Matrix / Structural palette
               char = matrixGlyphs[Math.floor(rand2 * matrixGlyphs.length)];
-              color = rand2 > 0.6 ? '#ffade4' : '#ddbecf'; // Core system pink/steel
+              color = rand2 > 0.6 ? '#e3c28d' : '#e6bdbb'; // Autumn cocoa/amber
             } else {
               // Sampled from Abyss / Infernal palette
               char = abyssGlyphs[Math.floor(rand2 * abyssGlyphs.length)];
-              color = rand2 > 0.6 ? '#f5b9a1' : '#ffade4'; // Warm amber/ember tones
+              color = rand2 > 0.6 ? '#ffb3b1' : '#e3c28d'; // Warm russet/ember tones
             }
 
             // Exponential spotlight falloff: bright in center, soft fade at perimeter
