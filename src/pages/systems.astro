@@ -10,13 +10,14 @@ const securityMetrics = [
     title: 'AdGuard Home DNS Sinkhole',
     category: 'Perimeter Defense & DNS Privacy',
     stats: [
-      { label: 'Blocked Ratio', value: '24.8%' },
-      { label: 'Filtered Queries (24h)', value: '78,900+' },
-      { label: 'Total Queries (24h)', value: '318,400+' },
+      { label: 'Blocked Ratio', value: '49.3%' },
+      { label: 'Filtered Queries (24h)', value: '40,600+' },
+      { label: 'Total Queries (24h)', value: '82,500+' },
       { label: 'Upstream Protocol', value: 'DNS-over-HTTPS (DoH)' },
     ],
     details: 'Authoritative local DHCP & recursive caching DNS engine enforcing the HaGeZi Pro threat blocklist to drop malware, tracking, and telemetry queries at the gateway.',
     status: 'enforcing',
+    isAdguard: true,
   },
   {
     title: 'CrowdSec IPS (v1.8.1)',
@@ -107,9 +108,14 @@ const infrastructureNodes = [
 
   <!-- Network Hardening & Telemetry Section -->
   <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
-    <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
-      <span class="text-accent mr-2 font-bold select-none">*</span> security & threat telemetry
-    </h2>
+    <div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-6 gap-2">
+      <h2 class="text-2xl font-semibold flex items-center text-white">
+        <span class="text-accent mr-2 font-bold select-none">*</span> security & threat telemetry
+      </h2>
+      <span id="adguard-sync-indicator" class="text-xs font-mono text-neutral-400">
+        telemetry updates hourly
+      </span>
+    </div>
 
     <div class="space-y-6">
       {securityMetrics.map((card) => (
@@ -132,7 +138,12 @@ const infrastructureNodes = [
             {card.stats.map((s) => (
               <div class="bg-neutral-950/70 border border-neutral-800/60 rounded-lg p-2.5">
                 <span class="text-[10px] text-neutral-400 block font-mono uppercase tracking-wider">{s.label}</span>
-                <span class="text-xs text-accent font-semibold font-mono mt-0.5 block">{s.value}</span>
+                <span
+                  class="text-xs text-accent font-semibold font-mono mt-0.5 block"
+                  data-adguard-stat={card.isAdguard ? s.label : undefined}
+                >
+                  {s.value}
+                </span>
               </div>
             ))}
           </div>
@@ -144,42 +155,6 @@ const infrastructureNodes = [
   <!-- Interactive Infrastructure Flow Map -->
   <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
     <InfrastructureMap />
-  </section>
-
-  <!-- Network Hardening & Telemetry Section -->
-  <section class="mb-16 pt-8 border-t border-neutral-800/80 animate-fade-in-up">
-    <h2 class="text-2xl font-semibold mb-6 flex items-center text-white">
-      <span class="text-accent mr-2 font-bold select-none">*</span> security & threat telemetry
-    </h2>
-
-    <div class="space-y-6">
-      {securityMetrics.map((card) => (
-        <div class="rounded-xl border border-neutral-800/80 bg-neutral-900/30 p-5 hover:border-neutral-700/80 transition-colors">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div>
-              <h3 class="text-lg font-semibold text-white">{card.title}</h3>
-              <p class="text-xs text-neutral-400">{card.category}</p>
-            </div>
-            <span class="self-start sm:self-auto text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/25 text-accent">
-              {card.status}
-            </span>
-          </div>
-
-          <p class="text-xs text-neutral-300 leading-relaxed mb-4">
-            {card.details}
-          </p>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-neutral-800/60">
-            {card.stats.map((s) => (
-              <div class="bg-neutral-950/70 border border-neutral-800/60 rounded-lg p-2.5">
-                <span class="text-[10px] text-neutral-400 block font-mono uppercase tracking-wider">{s.label}</span>
-                <span class="text-xs text-accent font-semibold font-mono mt-0.5 block">{s.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
   </section>
 
   <!-- Certifications & Official Verification -->
@@ -239,6 +214,40 @@ const infrastructureNodes = [
       </div>
     </div>
   </section>
+
+  <script>
+    async function syncAdguardTelemetry() {
+      try {
+        const res = await fetch('/adguard-stats.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const statMap = {
+          'Blocked Ratio': data.blocked_ratio,
+          'Filtered Queries (24h)': `${data.filtered_queries}+`,
+          'Total Queries (24h)': `${data.total_queries}+`,
+          'Upstream Protocol': data.upstream_protocol,
+        };
+
+        document.querySelectorAll('[data-adguard-stat]').forEach((el) => {
+          const label = el.getAttribute('data-adguard-stat');
+          if (label && statMap[label]) {
+            el.textContent = statMap[label];
+          }
+        });
+
+        const indicator = document.getElementById('adguard-sync-indicator');
+        if (indicator && data.last_updated) {
+          indicator.textContent = `live · updated ${data.last_updated}`;
+        }
+      } catch {
+        // Keep fallback SSR values on network error
+      }
+    }
+
+    document.addEventListener('astro:page-load', syncAdguardTelemetry);
+    syncAdguardTelemetry();
+  </script>
 
   <Elsewhere />
 </Layout>

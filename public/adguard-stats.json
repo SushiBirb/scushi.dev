@@ -1,0 +1,12 @@
+{
+  "total_queries": "82,471",
+  "filtered_queries": "40,630",
+  "blocked_ratio": "49.3%",
+  "upstream_protocol": "DNS-over-HTTPS (DoH)",
+  "last_updated": "2026-10-24 03:18 UTC",
+  "raw": {
+    "total": 82471,
+    "blocked": 40630,
+    "ratio": 49.3
+  }
+}
