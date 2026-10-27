@@ -237,11 +237,43 @@ const infrastructureNodes = [
         });
 
         const indicator = document.getElementById('adguard-sync-indicator');
-        if (indicator && data.last_updated) {
-          indicator.textContent = `live · updated ${data.last_updated}`;
+        const rawTime = data.last_updated_iso || data.last_updated;
+        if (indicator && rawTime) {
+          indicator.textContent = `live · updated ${formatTelemetryTime(rawTime)}`;
+          indicator.title = `UTC: ${data.last_updated || rawTime}`;
         }
       } catch {
         // Keep fallback SSR values on network error
+      }
+    }
+
+    function formatTelemetryTime(rawStr) {
+      try {
+        let d = new Date(rawStr);
+        if (isNaN(d.getTime())) {
+          const normalized = rawStr.trim().replace(' UTC', 'Z').replace(' ', 'T');
+          d = new Date(normalized.endsWith('Z') ? normalized : normalized + 'Z');
+        }
+        if (isNaN(d.getTime())) return rawStr;
+
+        const utcHours = String(d.getUTCHours()).padStart(2, '0');
+        const utcMins = String(d.getUTCMinutes()).padStart(2, '0');
+        const utcTime = `${utcHours}:${utcMins} UTC`;
+
+        const localTime = d.toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZoneName: 'short',
+        });
+
+        const today = new Date();
+        const isToday = d.toDateString() === today.toDateString();
+
+        return isToday
+          ? `${localTime} (${utcTime})`
+          : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${localTime} (${utcTime})`;
+      } catch {
+        return rawStr;
       }
     }
 
