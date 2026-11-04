@@ -218,25 +218,22 @@
     if (ship.worldX < 0) ship.worldX = w;
     if (ship.worldX > w) ship.worldX = 0;
 
-    // Vertical Camera Tracking & Center-Lock
     const docHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
     const viewHeight = window.innerHeight;
     const maxScroll = Math.max(0, docHeight - viewHeight);
 
-    // Keep ship centered as long as page has scroll room
-    if (maxScroll > 0) {
+    // Vertical wrap / teleport between top and bottom extremes of the page
+    if (ship.worldY < 0) {
+      ship.worldY = docHeight - 20;
+      window.scrollTo(0, maxScroll);
+    } else if (ship.worldY > docHeight) {
+      ship.worldY = 20;
+      window.scrollTo(0, 0);
+    } else if (maxScroll > 0) {
+      // Keep ship centered vertically as long as page has scroll room
       const idealScroll = ship.worldY - viewHeight / 2;
       const targetScroll = Math.max(0, Math.min(maxScroll, idealScroll));
       window.scrollTo(0, targetScroll);
-    }
-
-    // Bounce off top and bottom limits of the entire document
-    if (ship.worldY < 14) {
-      ship.worldY = 14;
-      ship.vy = Math.abs(ship.vy) * 0.7;
-    } else if (ship.worldY > docHeight - 14) {
-      ship.worldY = docHeight - 14;
-      ship.vy = -Math.abs(ship.vy) * 0.7;
     }
 
     // Update lasers
@@ -378,9 +375,11 @@
       keys[e.code] = true;
       if (e.code === 'Space') {
         e.preventDefault();
+        if (e.repeat) return; // Prevent machine gun auto-fire: requires discrete taps per shot
         fireLaser();
       } else if (e.code === 'KeyB') {
         e.preventDefault();
+        if (e.repeat) return;
         fireBomb();
       } else if (e.code === 'Escape') {
         e.preventDefault();
