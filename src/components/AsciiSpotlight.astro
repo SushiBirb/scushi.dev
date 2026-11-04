@@ -61,6 +61,11 @@
     let animationFrameId: number;
 
     function render(time: number) {
+      if (canvas.closest('.hidden')) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       ctx!.clearRect(0, 0, width, height);
 
       // Only draw if mouse is inside the viewport

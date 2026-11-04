@@ -1023,6 +1023,11 @@
         el === env.host ||
         el.id === "ascii-spotlight-canvas" ||
         el.id === "pointer-spotlight" ||
+        el.id === "vector-field-canvas" ||
+        el.id === "ascii-descent-canvas" ||
+        el.id === "vine-left" ||
+        el.id === "vine-right" ||
+        (el.closest && el.closest("#bg-mode-spotlight, #bg-mode-vector, #bg-mode-matrix, #bg-mode-vines")) ||
         (el.hasAttribute && el.hasAttribute("data-swarm-skip"))
       )
         return;

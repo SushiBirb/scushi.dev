@@ -59,6 +59,11 @@
     let animationFrameId: number;
 
     function render(time: number) {
+      if (canvas.closest('.hidden')) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       // Smooth scroll lerp
       scrollY += (targetScrollY - scrollY) * 0.1;
 

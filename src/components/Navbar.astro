@@ -41,25 +41,127 @@ const isSystems = pathname === '/systems';
     >
       <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">s</span>] </span>systems
     </a>
-
-    <button
-      id="nav-swarm-btn"
-      type="button"
-      title="Swarm Rebuild: multiplayer cursors reconstruct the page [b]"
-      class="py-1.5 px-2 sm:px-0 text-neutral-400 hover:text-accent transition-colors duration-200 cursor-pointer inline-flex items-center text-sm font-mono"
-    >
-      <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">b</span>] </span>swarm
-    </button>
   </div>
 
-  <div class="flex items-center gap-2 text-xs text-neutral-400 bg-neutral-900/60 border border-neutral-800/80 px-2.5 py-1 rounded-full">
-    <span class="relative flex h-2 w-2">
-      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-      <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-    </span>
-    <span class="text-neutral-300">scushi-server</span>
-    <span class="text-neutral-600">·</span>
-    <span class="text-neutral-400">active</span>
+  <div class="flex items-center gap-2 sm:gap-3">
+    <!-- Fun Mode Dropdown -->
+    <div class="relative" id="fun-mode-dropdown-root">
+      <button
+        id="fun-mode-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-haspopup="true"
+        title="Select visual fun mode across the site"
+        class="flex items-center gap-1.5 text-xs text-neutral-300 bg-neutral-900/80 hover:bg-neutral-800/80 border border-neutral-800/80 hover:border-accent/40 px-2.5 py-1 rounded-full font-mono transition-all duration-200 cursor-pointer shadow-sm select-none"
+      >
+        <span class="text-accent text-sm leading-none">✦</span>
+        <span class="hidden sm:inline text-neutral-400">mode:</span>
+        <span id="fun-mode-current" class="text-neutral-200 font-medium">spotlight</span>
+        <svg class="w-3 h-3 text-neutral-500 transition-transform duration-200" id="fun-mode-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div
+        id="fun-mode-menu"
+        class="hidden absolute right-0 mt-2 w-56 bg-neutral-900/95 border border-neutral-800/90 rounded-xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in text-xs font-mono select-none"
+      >
+        <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider text-neutral-500 border-b border-neutral-800/60 mb-1 flex items-center justify-between">
+          <span>visual fun modes</span>
+          <span class="text-neutral-600 text-[9px]">persistent</span>
+        </div>
+
+        <button
+          type="button"
+          data-mode="spotlight"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">·</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Spotlight</div>
+              <div class="text-[10px] text-neutral-500">Subtle cursor light (default)</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="swarm"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">✦</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors flex items-center gap-1.5">
+                <span>Swarm Rebuild</span>
+                <span class="px-1 py-0.2 rounded bg-neutral-800 text-neutral-400 text-[9px]">[b]</span>
+              </div>
+              <div class="text-[10px] text-neutral-500">Multiplayer cursor build</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="vector"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">⚡</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Vector Field</div>
+              <div class="text-[10px] text-neutral-500">Magnetic physics needles</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="matrix"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">▼</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Matrix Rain</div>
+              <div class="text-[10px] text-neutral-500">Subterranean ASCII descent</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="vines"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">🌿</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Creeping Vines</div>
+              <div class="text-[10px] text-neutral-500">Procedural margin growth</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Telemetry status pill -->
+    <div class="hidden sm:flex items-center gap-2 text-xs text-neutral-400 bg-neutral-900/60 border border-neutral-800/80 px-2.5 py-1 rounded-full">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+      </span>
+      <span class="text-neutral-300">scushi-server</span>
+      <span class="text-neutral-600">·</span>
+      <span class="text-neutral-400">active</span>
+    </div>
   </div>
 </nav>
 
@@ -83,20 +185,59 @@ const isSystems = pathname === '/systems';
   setupNavHome();
   document.addEventListener('astro:page-load', setupNavHome);
 
-  function setupNavSwarm() {
-    const swarmBtn = document.getElementById('nav-swarm-btn');
-    if (swarmBtn) {
-      if (swarmBtn.dataset.listenerAttached === 'true') return;
-      swarmBtn.dataset.listenerAttached = 'true';
-      swarmBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if ((window as any).triggerSwarmRebuild) {
-          (window as any).triggerSwarmRebuild();
+  function setupFunModeDropdown() {
+    const root = document.getElementById('fun-mode-dropdown-root');
+    const toggle = document.getElementById('fun-mode-toggle');
+    const menu = document.getElementById('fun-mode-menu');
+    const chevron = document.getElementById('fun-mode-chevron');
+
+    if (!toggle || !menu || toggle.dataset.listenerAttached === 'true') return;
+    toggle.dataset.listenerAttached = 'true';
+
+    function openMenu() {
+      menu?.classList.remove('hidden');
+      toggle?.setAttribute('aria-expanded', 'true');
+      chevron?.classList.add('rotate-180');
+    }
+
+    function closeMenu() {
+      menu?.classList.add('hidden');
+      toggle?.setAttribute('aria-expanded', 'false');
+      chevron?.classList.remove('rotate-180');
+    }
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      if (isExpanded) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (root && !root.contains(e.target as Node)) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    const items = menu.querySelectorAll('.fun-mode-item');
+    items.forEach((item) => {
+      item.addEventListener('click', () => {
+        const mode = (item as HTMLElement).dataset.mode;
+        closeMenu();
+        if (mode && typeof (window as any).applyFunMode === 'function') {
+          (window as any).applyFunMode(mode);
         }
       });
-    }
+    });
   }
 
-  setupNavSwarm();
-  document.addEventListener('astro:page-load', setupNavSwarm);
+  setupFunModeDropdown();
+  document.addEventListener('astro:page-load', setupFunModeDropdown);
 </script>

@@ -70,6 +70,11 @@
     let animationFrameId: number;
 
     function render(time: number) {
+      if (canvas.closest('.hidden')) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       ctx!.clearRect(0, 0, width, height);
 
       const centerX = width / 2;

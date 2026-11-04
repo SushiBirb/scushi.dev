@@ -1,6 +1,9 @@
 ---
 import '../styles/global.css';
 import AsciiSpotlight from '../components/AsciiSpotlight.astro';
+import VectorField from '../components/VectorField.astro';
+import AsciiDescent from '../components/AsciiDescent.astro';
+import GrowingVines from '../components/GrowingVines.astro';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -37,8 +40,22 @@ const {
     <ClientRouter />
   </head>
   <body class="min-h-screen bg-[var(--color-canvas)] text-neutral-200 font-mono antialiased selection:bg-accent selection:text-neutral-950 relative overflow-x-hidden">
-    <!-- ASCII descent matrix illuminated strictly inside the cursor spotlight -->
-    <AsciiSpotlight />
+    <!-- Background Fun Modes (persistent across navigation) -->
+    <div id="bg-mode-spotlight" class="transition-opacity duration-300">
+      <AsciiSpotlight />
+    </div>
+
+    <div id="bg-mode-vector" class="hidden transition-opacity duration-300">
+      <VectorField />
+    </div>
+
+    <div id="bg-mode-matrix" class="hidden transition-opacity duration-300">
+      <AsciiDescent />
+    </div>
+
+    <div id="bg-mode-vines" class="hidden transition-opacity duration-300">
+      <GrowingVines />
+    </div>
 
     <!-- Subtle, toned-down cursor spotlight (25% original diameter: 160px) -->
     <div id="pointer-spotlight" transition:persist class="pointer-events-none fixed inset-0 z-0 opacity-0 transition-opacity duration-500"></div>
@@ -66,6 +83,74 @@ const {
 
       initPointerSpotlight();
       document.addEventListener('astro:page-load', initPointerSpotlight);
+
+      // Visual Fun Mode Manager (persistent across routes)
+      function applyFunMode(mode: string, save = true) {
+        if (mode === 'swarm') {
+          triggerSwarmRebuild();
+          return;
+        }
+
+        const validModes = ['spotlight', 'vector', 'matrix', 'vines'];
+        const targetMode = validModes.includes(mode) ? mode : 'spotlight';
+
+        if (save) {
+          try {
+            localStorage.setItem('scushi_fun_mode', targetMode);
+          } catch (_) {}
+        }
+
+        validModes.forEach((m) => {
+          const el = document.getElementById(`bg-mode-${m}`);
+          if (el) {
+            if (m === targetMode) {
+              el.classList.remove('hidden');
+            } else {
+              el.classList.add('hidden');
+            }
+          }
+        });
+
+        // Toggle pointer spotlight
+        const spotlight = document.getElementById('pointer-spotlight');
+        if (spotlight) {
+          if (targetMode === 'matrix') {
+            spotlight.style.display = 'none';
+          } else {
+            spotlight.style.display = '';
+          }
+        }
+
+        const label = document.getElementById('fun-mode-current');
+        if (label) {
+          label.textContent = targetMode;
+        }
+
+        document.querySelectorAll('.fun-mode-item').forEach((item) => {
+          const m = (item as HTMLElement).dataset.mode;
+          const check = item.querySelector('.mode-check');
+          if (check) {
+            if (m === targetMode) {
+              check.classList.remove('hidden');
+            } else {
+              check.classList.add('hidden');
+            }
+          }
+        });
+      }
+
+      (window as any).applyFunMode = applyFunMode;
+
+      function initActiveFunMode() {
+        let saved = 'spotlight';
+        try {
+          saved = localStorage.getItem('scushi_fun_mode') || 'spotlight';
+        } catch (_) {}
+        applyFunMode(saved, false);
+      }
+
+      initActiveFunMode();
+      document.addEventListener('astro:page-load', initActiveFunMode);
 
       // Swarm Rebuild Loader & Triggers
       function triggerSwarmRebuild() {
