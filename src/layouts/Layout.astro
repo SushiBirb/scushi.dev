@@ -76,7 +76,7 @@ const {
           const existing = document.getElementById('swarm-rebuild-script');
           if (!existing) {
             const script = document.createElement('script');
-            script.src = '/swarm.js';
+            script.src = '/swarm.js?v=2';
             script.id = 'swarm-rebuild-script';
             document.body.appendChild(script);
           }
