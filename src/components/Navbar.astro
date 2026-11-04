@@ -41,6 +41,15 @@ const isSystems = pathname === '/systems';
     >
       <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">s</span>] </span>systems
     </a>
+
+    <button
+      id="nav-swarm-btn"
+      type="button"
+      title="Swarm Rebuild: multiplayer cursors reconstruct the page [b]"
+      class="py-1.5 px-2 sm:px-0 text-neutral-400 hover:text-accent transition-colors duration-200 cursor-pointer inline-flex items-center text-sm font-mono"
+    >
+      <span class="text-neutral-600 sm:inline">[<span class="text-neutral-400">b</span>] </span>swarm
+    </button>
   </div>
 
   <div class="flex items-center gap-2 text-xs text-neutral-400 bg-neutral-900/60 border border-neutral-800/80 px-2.5 py-1 rounded-full">
@@ -73,4 +82,21 @@ const isSystems = pathname === '/systems';
 
   setupNavHome();
   document.addEventListener('astro:page-load', setupNavHome);
+
+  function setupNavSwarm() {
+    const swarmBtn = document.getElementById('nav-swarm-btn');
+    if (swarmBtn) {
+      if (swarmBtn.dataset.listenerAttached === 'true') return;
+      swarmBtn.dataset.listenerAttached = 'true';
+      swarmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if ((window as any).triggerSwarmRebuild) {
+          (window as any).triggerSwarmRebuild();
+        }
+      });
+    }
+  }
+
+  setupNavSwarm();
+  document.addEventListener('astro:page-load', setupNavSwarm);
 </script>

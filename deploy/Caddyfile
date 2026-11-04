@@ -1,7 +1,7 @@
 # Production Hardened Caddy Configuration for scushi.dev
 # Target Host: LXC 104 (caddy) or Proxmox Static Web Container
 
-scushi.dev, www.scushi.dev {
+scushi.dev, www.scushi.dev, beta.scushi.dev, test.scushi.dev {
     root * /var/www/scushi.dev
     encode zstd gzip
 

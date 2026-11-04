@@ -67,7 +67,37 @@ const {
       initPointerSpotlight();
       document.addEventListener('astro:page-load', initPointerSpotlight);
 
-      // Universal keyboard shortcuts: [h], [p], [s]
+      // Swarm Rebuild Loader & Triggers
+      function triggerSwarmRebuild() {
+        if ((window as any).__swarmRebuild) {
+          (window as any).__swarmRebuild.toggle();
+        } else {
+          (window as any).__swarmAutoStart = true;
+          const existing = document.getElementById('swarm-rebuild-script');
+          if (!existing) {
+            const script = document.createElement('script');
+            script.src = '/swarm.js';
+            script.id = 'swarm-rebuild-script';
+            document.body.appendChild(script);
+          }
+        }
+      }
+
+      (window as any).triggerSwarmRebuild = triggerSwarmRebuild;
+
+      function checkSwarmAutoLaunch() {
+        const h = window.location.hostname;
+        const s = window.location.search;
+        const p = window.location.pathname;
+        if (h.startsWith('beta.') || h.startsWith('test.') || s.includes('swarm') || p.endsWith('/swarm')) {
+          triggerSwarmRebuild();
+        }
+      }
+
+      checkSwarmAutoLaunch();
+      document.addEventListener('astro:page-load', checkSwarmAutoLaunch);
+
+      // Universal keyboard shortcuts: [h], [p], [s], [b]
       window.addEventListener('keydown', (e) => {
         if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -96,6 +126,9 @@ const {
           } else {
             navigate('/systems/');
           }
+        } else if (key === 'b') {
+          e.preventDefault();
+          triggerSwarmRebuild();
         }
       });
     </script>
