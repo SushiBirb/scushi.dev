@@ -84,12 +84,102 @@ const {
       initPointerSpotlight();
       document.addEventListener('astro:page-load', initPointerSpotlight);
 
-      // Visual Fun Mode Manager (persistent across routes)
-      function applyFunMode(mode: string, save = true) {
-        if (mode === 'swarm') {
+      // Visual Fun Mode & Interactive Toys Manager
+      let activeToy: string | null = null;
+
+      const TOY_CONFIGS: Record<string, { src: string; global: string }> = {
+        asteroids: { src: '/toys/asteroids.js', global: '__asteroids' },
+        gravity: { src: '/toys/gravity.js', global: '__gravity' },
+        katamari: { src: '/toys/katamari.js', global: '__katamari' },
+        oneko: { src: '/toys/oneko.js', global: '__oneko' },
+        crt: { src: '/toys/crt.js', global: '__crt' },
+        alarm: { src: '/toys/alarm.js', global: '__alarm' },
+        dvd: { src: '/toys/dvd.js', global: '__dvd' },
+        elevator: { src: '/toys/elevator.js', global: '__elevator' },
+        ghost: { src: '/toys/ghost-cursors.js', global: '__ghostCursors' },
+        webamp: { src: '/toys/webamp.js', global: '__webamp' },
+      };
+
+      function updateModeUI(targetMode: string) {
+        const label = document.getElementById('fun-mode-current');
+        if (label) {
+          label.textContent = targetMode;
+        }
+
+        document.querySelectorAll('.fun-mode-item').forEach((item) => {
+          const m = (item as HTMLElement).dataset.mode;
+          const check = item.querySelector('.mode-check');
+          if (check) {
+            if (m === targetMode) {
+              check.classList.remove('hidden');
+            } else {
+              check.classList.add('hidden');
+            }
+          }
+        });
+      }
+
+      function stopActiveToy() {
+        if (!activeToy) return;
+        if (activeToy === 'swarm') {
+          if ((window as any).__swarmRebuild?.cleanup) {
+            (window as any).__swarmRebuild.cleanup();
+          }
+        } else if (TOY_CONFIGS[activeToy]) {
+          const g = (window as any)[TOY_CONFIGS[activeToy].global];
+          if (g && typeof g.stop === 'function') {
+            g.stop();
+          }
+        }
+        activeToy = null;
+      }
+
+      function launchToy(toy: string) {
+        if (toy === 'swarm') {
           triggerSwarmRebuild();
+          activeToy = 'swarm';
+          updateModeUI('swarm');
           return;
         }
+
+        const config = TOY_CONFIGS[toy];
+        if (!config) return;
+
+        if (activeToy === toy) {
+          const g = (window as any)[config.global];
+          if (g && typeof g.isRunning === 'function' && g.isRunning()) {
+            g.stop();
+            activeToy = null;
+            initActiveFunMode();
+            return;
+          }
+        }
+
+        stopActiveToy();
+
+        const existingGlobal = (window as any)[config.global];
+        if (existingGlobal && typeof existingGlobal.start === 'function') {
+          existingGlobal.start();
+          activeToy = toy;
+          updateModeUI(toy);
+        } else {
+          const script = document.createElement('script');
+          script.src = `${config.src}?v=1`;
+          script.onload = () => {
+            activeToy = toy;
+            updateModeUI(toy);
+          };
+          document.body.appendChild(script);
+        }
+      }
+
+      function applyFunMode(mode: string, save = true) {
+        if (mode === 'swarm' || TOY_CONFIGS[mode]) {
+          launchToy(mode);
+          return;
+        }
+
+        stopActiveToy();
 
         const validModes = ['spotlight', 'vector', 'matrix', 'vines'];
         const targetMode = validModes.includes(mode) ? mode : 'spotlight';
@@ -121,25 +211,11 @@ const {
           }
         }
 
-        const label = document.getElementById('fun-mode-current');
-        if (label) {
-          label.textContent = targetMode;
-        }
-
-        document.querySelectorAll('.fun-mode-item').forEach((item) => {
-          const m = (item as HTMLElement).dataset.mode;
-          const check = item.querySelector('.mode-check');
-          if (check) {
-            if (m === targetMode) {
-              check.classList.remove('hidden');
-            } else {
-              check.classList.add('hidden');
-            }
-          }
-        });
+        updateModeUI(targetMode);
       }
 
       (window as any).applyFunMode = applyFunMode;
+      (window as any).stopActiveToy = stopActiveToy;
 
       function initActiveFunMode() {
         let saved = 'spotlight';
@@ -151,6 +227,11 @@ const {
 
       initActiveFunMode();
       document.addEventListener('astro:page-load', initActiveFunMode);
+
+      // Clean up running toys on page navigation if swapping
+      document.addEventListener('astro:before-swap', () => {
+        stopActiveToy();
+      });
 
       // Swarm Rebuild Loader & Triggers
       function triggerSwarmRebuild() {

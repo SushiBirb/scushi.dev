@@ -65,17 +65,17 @@ const isSystems = pathname === '/systems';
       <!-- Dropdown Menu -->
       <div
         id="fun-mode-menu"
-        class="hidden absolute right-0 mt-2 w-56 bg-neutral-900/95 border border-neutral-800/90 rounded-xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in text-xs font-mono select-none"
+        class="hidden absolute right-0 mt-2 w-64 max-h-[82vh] overflow-y-auto bg-neutral-900/95 border border-neutral-800/90 rounded-xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in text-xs font-mono select-none"
       >
         <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider text-neutral-500 border-b border-neutral-800/60 mb-1 flex items-center justify-between">
-          <span>visual fun modes</span>
+          <span>ambient background</span>
           <span class="text-neutral-600 text-[9px]">persistent</span>
         </div>
 
         <button
           type="button"
           data-mode="spotlight"
-          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
         >
           <div class="flex items-center gap-2">
             <span class="text-accent text-xs">·</span>
@@ -89,26 +89,8 @@ const isSystems = pathname === '/systems';
 
         <button
           type="button"
-          data-mode="swarm"
-          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
-        >
-          <div class="flex items-center gap-2">
-            <span class="text-accent text-xs">✦</span>
-            <div>
-              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors flex items-center gap-1.5">
-                <span>Swarm Rebuild</span>
-                <span class="px-1 py-0.2 rounded bg-neutral-800 text-neutral-400 text-[9px]">[b]</span>
-              </div>
-              <div class="text-[10px] text-neutral-500">Multiplayer cursor build</div>
-            </div>
-          </div>
-          <span class="mode-check text-accent hidden font-bold">✓</span>
-        </button>
-
-        <button
-          type="button"
           data-mode="vector"
-          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
         >
           <div class="flex items-center gap-2">
             <span class="text-accent text-xs">⚡</span>
@@ -123,7 +105,7 @@ const isSystems = pathname === '/systems';
         <button
           type="button"
           data-mode="matrix"
-          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
         >
           <div class="flex items-center gap-2">
             <span class="text-accent text-xs">▼</span>
@@ -138,13 +120,191 @@ const isSystems = pathname === '/systems';
         <button
           type="button"
           data-mode="vines"
-          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
         >
           <div class="flex items-center gap-2">
             <span class="text-accent text-xs">🌿</span>
             <div>
               <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Creeping Vines</div>
               <div class="text-[10px] text-neutral-500">Procedural margin growth</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider text-neutral-500 border-t border-b border-neutral-800/60 my-1 flex items-center justify-between">
+          <span>interactive toys</span>
+          <span class="text-neutral-600 text-[9px]">live action</span>
+        </div>
+
+        <button
+          type="button"
+          data-mode="swarm"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">✦</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors flex items-center gap-1.5">
+                <span>Swarm Rebuild</span>
+                <span class="px-1 py-0.2 rounded bg-neutral-800 text-neutral-400 text-[9px]">[b]</span>
+              </div>
+              <div class="text-[10px] text-neutral-500">Multiplayer cursor build & wipe</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="asteroids"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">🚀</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Asteroids Ship</div>
+              <div class="text-[10px] text-neutral-500">Shoot & destroy page DOM</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="gravity"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">🪐</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Google Gravity</div>
+              <div class="text-[10px] text-neutral-500">2D physics drop & fling cards</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="katamari"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">⚽</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Katamari Damacy</div>
+              <div class="text-[10px] text-neutral-500">Roll up page text & cards</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="oneko"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">🐱</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Oneko Desktop Cat</div>
+              <div class="text-[10px] text-neutral-500">90s pixel cat chases cursor</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider text-neutral-500 border-t border-b border-neutral-800/60 my-1 flex items-center justify-between">
+          <span>retro fx & audio</span>
+          <span class="text-neutral-600 text-[9px]">audio / fx</span>
+        </div>
+
+        <button
+          type="button"
+          data-mode="crt"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">📺</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">CRT Terminal</div>
+              <div class="text-[10px] text-neutral-500">Curved scanlines & clicker</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="alarm"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">🚨</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">SOC Incident Alarm</div>
+              <div class="text-[10px] text-neutral-500">DEFCON 1 strobe & siren</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="dvd"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">📀</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">DVD Screensaver</div>
+              <div class="text-[10px] text-neutral-500">Wait for the corner bounce</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="elevator"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">🛗</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Elevator Ride</div>
+              <div class="text-[10px] text-neutral-500">Smooth ride to top with ding</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="ghost"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">👻</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Ghost Cursors</div>
+              <div class="text-[10px] text-neutral-500">18-node trailing spring trail</div>
+            </div>
+          </div>
+          <span class="mode-check text-accent hidden font-bold">✓</span>
+        </button>
+
+        <button
+          type="button"
+          data-mode="webamp"
+          class="fun-mode-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left hover:bg-neutral-800/70 hover:text-accent transition-colors group cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-xs">📻</span>
+            <div>
+              <div class="text-neutral-200 group-hover:text-accent font-medium transition-colors">Webamp (Winamp)</div>
+              <div class="text-[10px] text-neutral-500">Classic Winamp 2.9 player</div>
             </div>
           </div>
           <span class="mode-check text-accent hidden font-bold">✓</span>
