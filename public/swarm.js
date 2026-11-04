@@ -3894,16 +3894,11 @@
 
   const shouldAutoStart = () => {
     try {
-      const h = window.location.hostname;
-      const s = window.location.search;
-      const p = window.location.pathname;
-      return (
-        window.__swarmAutoStart ||
-        h.startsWith("beta.") ||
-        h.startsWith("test.") ||
-        s.includes("swarm") ||
-        p.endsWith("/swarm")
-      );
+      if (window.__swarmAutoStart === true) {
+        window.__swarmAutoStart = false;
+        return true;
+      }
+      return false;
     } catch (_) {
       return false;
     }

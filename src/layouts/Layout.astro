@@ -233,7 +233,7 @@ const {
         stopActiveToy();
       });
 
-      // Swarm Rebuild Loader & Triggers
+      // Swarm Rebuild Loader & Triggers (only when explicitly requested)
       function triggerSwarmRebuild() {
         if ((window as any).__swarmRebuild) {
           (window as any).__swarmRebuild.toggle();
@@ -242,7 +242,7 @@ const {
           const existing = document.getElementById('swarm-rebuild-script');
           if (!existing) {
             const script = document.createElement('script');
-            script.src = '/swarm.js?v=2';
+            script.src = '/swarm.js?v=3';
             script.id = 'swarm-rebuild-script';
             document.body.appendChild(script);
           }
@@ -250,18 +250,6 @@ const {
       }
 
       (window as any).triggerSwarmRebuild = triggerSwarmRebuild;
-
-      function checkSwarmAutoLaunch() {
-        const h = window.location.hostname;
-        const s = window.location.search;
-        const p = window.location.pathname;
-        if (h.startsWith('beta.') || h.startsWith('test.') || s.includes('swarm') || p.endsWith('/swarm')) {
-          triggerSwarmRebuild();
-        }
-      }
-
-      checkSwarmAutoLaunch();
-      document.addEventListener('astro:page-load', checkSwarmAutoLaunch);
 
       // Universal keyboard shortcuts: [h], [p], [s], [b]
       window.addEventListener('keydown', (e) => {
