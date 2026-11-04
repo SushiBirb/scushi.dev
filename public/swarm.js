@@ -2012,6 +2012,13 @@
             s += `<line x1="${a.x}" y1="${a.y}" x2="${z.x}" y2="${z.y}" stroke="${RED}" stroke-width="1"/>`;
             const horiz = a.y === z.y;
             b += `<div class="badge" style="left:${f1(horiz ? (a.x + z.x) / 2 : a.x + 18)}px;top:${f1(horiz ? a.y + 8 : (a.y + z.y) / 2 - 9)}px;background:${RED}">${v.label}</div>`;
+          } else if (v.t === "guide_line") {
+            const y = f1(Y(v.y, st));
+            const col = v.color || RED;
+            s += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${col}" stroke-width="2"/>`;
+            if (v.label) {
+              b += `<div class="badge" style="left:${f1(W / 2)}px;top:${f1(y - 18)}px;background:${col}">${v.label}</div>`;
+            }
           }
         }
       }
@@ -2123,6 +2130,7 @@
       this.nextId = 0;
       this.spawnCooldown = 0;
       this.flocking = false;
+      this.finishing = false;
       this.lastT = null;
       this.tv = { x: 0, y: 0 };
       this.mouse = null;
@@ -2329,24 +2337,19 @@
         }
       }
 
-      if (!this.flocking && this.started && this.waitCount === 0) {
-        for (const c of this.cursors)
-          if (!c.task && !c.follow) {
-            c.follow = true;
-            c.gen = null;
-            c.leaving = false;
-            c.ov = null;
-            c.shape = "arrow";
+      if (!this.finishing && this.started && this.waitCount === 0) {
+        let allDone = true;
+        for (const c of this.cursors) {
+          if (c.task) {
+            allDone = false;
+            break;
           }
-        if (this.cursors.every((c) => c.follow)) {
-          this.flocking = true;
+        }
+        if (allDone) {
+          this.finishing = true;
           this.endTime = this.time;
           if (this.onComplete) this.onComplete();
         }
-      }
-      if (this.flocking) {
-        this.flock(dt);
-        return;
       }
       if (!this.started) {
         const center = this.fromViewport(vp.ox + vp.vw / 2, vp.oy + vp.vh / 2);
@@ -2389,7 +2392,7 @@
       }
 
       for (const c of [...this.cursors]) {
-        if (c.follow) continue;
+        if (c.follow || c._lead) continue;
         c.press = Math.max(0, c.press - dt * 6);
         if (c.angle !== 0) c.angle = Math.abs(c.angle) < 0.5 ? 0 : c.angle * (1 - Math.min(1, dt * 10));
         if (!c.task) {
@@ -3719,23 +3722,76 @@
     }
 
     onComplete() {
+      if (this.complete) return;
       this.complete = true;
-      if (this.sfx) this.sfx.finale();
       const E = this.engine;
       const v = this.view;
-      const workers = E.cursors.filter((c) => c.worked).length + E.retired;
-      const secs = (E.endTime - E.startTime).toFixed(1);
-      v.status.innerHTML = `Rebuilt by <b>${workers}</b> agents in <b>${secs}s</b>`;
-      v.barFill.style.width = "100%";
-      v.dots.innerHTML = "";
-      v.root.querySelector('[data-a="live"]').hidden = false;
-      v.root.querySelector('[data-a="replay"]').hidden = false;
-      v.root.querySelector('[data-a="tour"]').hidden = true;
-      v.root.querySelector('[data-a="speed"]').hidden = true;
       this.tour = false;
+
+      // Play finale chord + falling release sweep
+      if (this.sfx) {
+        this.sfx.finale();
+        this.sfx.release();
+      }
+
+      // 1. Tell all worker cursors to disperse off-screen immediately
+      for (const c of E.cursors) {
+        c.task = null;
+        c.follow = false;
+        c.leaving = true;
+        c.gen = E.leave(c);
+      }
+
+      // 2. Hide HUD controls smoothly
+      v.hud.classList.remove("on");
+
+      // 3. Create lead cursor that wipes down the page revealing live site + spotlight
+      const vw = v.vp.vw || window.innerWidth;
+      const vh = v.vp.vh || window.innerHeight;
+      const lead = E.makeCursor(vw / 2, 0);
+      lead.sticky = true;
+      lead._lead = true;
+      lead.color = "#e3c28d";
+      lead.name = "scushi";
+      lead.shape = "ns";
+      lead.ov = () => [
+        {
+          t: "guide_line",
+          y: lead.y,
+          color: "#e3c28d",
+          label: "scushi.dev",
+        },
+      ];
+      E.cursors.push(lead);
+
+      // 4. Smooth curtain wipe down over ~550ms
+      const startTime = performance.now();
+      const duration = 550;
+
+      const stepCurtain = () => {
+        if (this.dead) return;
+        const now = performance.now();
+        const t = clamp((now - startTime) / duration, 0, 1);
+        const eased = easeInOut(t);
+        const curY = eased * (vh + 35);
+        lead.y = curY;
+        const clipVal = `inset(${f1(curY)}px 0 0 0)`;
+        v.host.style.clipPath = clipVal;
+        v.host.style.webkitClipPath = clipVal;
+
+        if (t < 1) {
+          requestAnimationFrame(stepCurtain);
+        } else {
+          // Fully wiped down: clean up and remove overlay host
+          this.destroy(false);
+        }
+      };
+
+      requestAnimationFrame(stepCurtain);
     }
 
     destroy(reveal) {
+      if (app === this) app = null;
       unhidePage();
       if (this.sfx) {
         if (reveal) this.sfx.release();
@@ -3749,16 +3805,16 @@
       };
       if (reveal) {
         this.engine.releasing = true;
-        this.engine.flocking = true;
         for (const c of this.engine.cursors) {
-          c.gen = null;
+          c.gen = this.engine.leave(c);
+          c.leaving = true;
           c.follow = false;
         }
         this.view.hud.classList.remove("on");
         setTimeout(() => {
           this.view.host.style.setProperty("opacity", "0", "important");
-        }, 450);
-        setTimeout(finish, 1150);
+        }, 350);
+        setTimeout(finish, 850);
       } else {
         this.view.host.style.setProperty("transition", "opacity .25s ease", "important");
         this.view.host.style.setProperty("opacity", "0", "important");
