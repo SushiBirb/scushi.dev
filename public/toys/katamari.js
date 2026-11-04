@@ -9,7 +9,7 @@
 
   let ballX = window.innerWidth / 2;
   let ballY = window.innerHeight / 2;
-  let ballRadius = 26;
+  let ballRadius = 28;
   let ballAngle = 0;
   let targetX = ballX;
   let targetY = ballY;
@@ -37,11 +37,11 @@
       font-size: 11px;
       color: #ffade4;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
       user-select: none;
     `;
     hud.innerHTML = `
-      <span><strong>KATAMARI</strong>: <span id="kat-size">0.26m</span> (<span id="kat-count">0</span> items)</span>
+      <span><strong>KATAMARI</strong>: <span id="kat-size">0.28m</span> (<span id="kat-count">0</span> items)</span>
       <span style="color: #666;">| Move cursor to roll</span>
       <button id="kat-exit-btn" type="button" style="
         background: rgba(255, 173, 228, 0.15);
@@ -75,7 +75,7 @@
     ballY = window.innerHeight / 2;
     targetX = ballX;
     targetY = ballY;
-    ballRadius = 26;
+    ballRadius = 28;
     ballAngle = 0;
     collected = [];
     sparkles = [];
@@ -89,7 +89,8 @@
     window.addEventListener('mousemove', mousemoveHandler);
 
     function checkCollision() {
-      const candidates = document.querySelectorAll('h1, h2, h3, p, a, button, pre, li, .project-card, blockquote');
+      // Pick up compact elements only (headings, links, tags, buttons, code blocks, spans)
+      const candidates = document.querySelectorAll('a, button, code, strong, em, li, h1, h2, h3, nav a, .tag, blockquote');
       for (const el of candidates) {
         if (el.dataset.katamariCollected === 'true') continue;
         if (el.closest('#katamari-hud') || el.closest('#fun-mode-dropdown-root')) continue;
@@ -97,43 +98,45 @@
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) continue;
 
-        // Check distance to center
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
         const dist = Math.hypot(cx - ballX, cy - ballY);
 
-        // Can pick up if touching and item isn't vastly larger than ball
-        if (dist < ballRadius + Math.min(r.width, r.height) / 2) {
+        // Pick up when touching
+        if (dist < ballRadius + 15) {
           el.dataset.katamariCollected = 'true';
           const origStyle = el.getAttribute('style') || '';
 
-          // Lock element onto the ball's rotating frame
+          // Lock element tightly to ball surface
           const relAngle = Math.atan2(cy - ballY, cx - ballX) - ballAngle;
-          const relDist = Math.min(ballRadius * 0.9, dist);
 
           el.style.position = 'fixed';
           el.style.pointerEvents = 'none';
           el.style.zIndex = '2147483641';
+          el.style.transformOrigin = 'center center';
           el.style.transition = 'none';
+          el.style.maxWidth = '180px';
+          el.style.overflow = 'hidden';
+          el.style.textOverflow = 'ellipsis';
+          el.style.whiteSpace = 'nowrap';
 
           collected.push({
             el,
             origStyle,
-            relDist,
             relAngle,
             w: r.width,
             h: r.height,
           });
 
           // Grow the Katamari
-          ballRadius += 0.8;
+          ballRadius += 0.9;
           const sizeMeters = (ballRadius * 0.01).toFixed(2);
           const sizeEl = document.getElementById('kat-size');
           const countEl = document.getElementById('kat-count');
           if (sizeEl) sizeEl.textContent = `${sizeMeters}m`;
           if (countEl) countEl.textContent = collected.length.toString();
 
-          // Sparkle burst
+          // Sparkles
           for (let i = 0; i < 8; i++) {
             const a = Math.random() * Math.PI * 2;
             sparkles.push({
@@ -143,7 +146,7 @@
               vy: Math.sin(a) * (2 + Math.random() * 4),
               size: 2 + Math.random() * 3,
               color: ['#ffade4', '#ffea79', '#a6e3a1', '#89dceb'][Math.floor(Math.random() * 4)],
-              life: 30,
+              life: 25,
             });
           }
         }
@@ -158,7 +161,7 @@
       const speed = Math.hypot(dx, dy);
 
       if (speed > 1) {
-        const moveStep = Math.min(speed, 6);
+        const moveStep = Math.min(speed, 6.5);
         ballX += (dx / speed) * moveStep;
         ballY += (dy / speed) * moveStep;
         ballAngle += (moveStep / ballRadius) * (dx >= 0 ? 1 : -1);
@@ -182,10 +185,9 @@
       ctx.translate(ballX, ballY);
       ctx.rotate(ballAngle);
 
-      // Shaded green/rainbow sphere with bumps
       const grad = ctx.createRadialGradient(-ballRadius * 0.3, -ballRadius * 0.3, ballRadius * 0.1, 0, 0, ballRadius);
       grad.addColorStop(0, '#a6e3a1');
-      grad.addColorStop(0.7, '#40a02b');
+      grad.addColorStop(0.65, '#40a02b');
       grad.addColorStop(1, '#1e66f5');
 
       ctx.fillStyle = grad;
@@ -193,7 +195,7 @@
       ctx.arc(0, 0, ballRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bumps around the ball
+      // Bumps
       const bumpCount = 12;
       for (let i = 0; i < bumpCount; i++) {
         const a = (i / bumpCount) * Math.PI * 2;
@@ -206,15 +208,16 @@
       }
       ctx.restore();
 
-      // Update stuck elements position & rotation
+      // Position collected elements tightly on sphere surface
       for (const item of collected) {
         const curAngle = ballAngle + item.relAngle;
-        const ix = ballX + Math.cos(curAngle) * (ballRadius + 5);
-        const iy = ballY + Math.sin(curAngle) * (ballRadius + 5);
+        const surfaceDist = ballRadius + 4;
+        const ix = ballX + Math.cos(curAngle) * surfaceDist;
+        const iy = ballY + Math.sin(curAngle) * surfaceDist;
 
-        item.el.style.left = `${ix - item.w / 2}px`;
-        item.el.style.top = `${iy - item.h / 2}px`;
-        item.el.style.transform = `rotate(${curAngle + Math.PI / 2}rad) scale(0.85)`;
+        item.el.style.left = `${ix - item.w * 0.2}px`;
+        item.el.style.top = `${iy - item.h * 0.2}px`;
+        item.el.style.transform = `rotate(${curAngle + Math.PI / 2}rad) scale(0.4)`;
       }
 
       checkCollision();
@@ -249,13 +252,16 @@
       ctx = null;
     }
 
-    // Restore collected elements
     for (const item of collected) {
       delete item.el.dataset.katamariCollected;
       if (item.origStyle) item.el.setAttribute('style', item.origStyle);
       else item.el.removeAttribute('style');
     }
     collected = [];
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {

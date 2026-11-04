@@ -93,7 +93,6 @@ const {
         katamari: { src: '/toys/katamari.js', global: '__katamari' },
         oneko: { src: '/toys/oneko.js', global: '__oneko' },
         crt: { src: '/toys/crt.js', global: '__crt' },
-        alarm: { src: '/toys/alarm.js', global: '__alarm' },
         dvd: { src: '/toys/dvd.js', global: '__dvd' },
         elevator: { src: '/toys/elevator.js', global: '__elevator' },
         ghost: { src: '/toys/ghost-cursors.js', global: '__ghostCursors' },
@@ -121,6 +120,9 @@ const {
 
       function stopActiveToy() {
         if (!activeToy) return;
+        try {
+          sessionStorage.removeItem('scushi_active_toy');
+        } catch (_) {}
         if (activeToy === 'swarm') {
           if ((window as any).__swarmRebuild?.cleanup) {
             (window as any).__swarmRebuild.cleanup();
@@ -134,7 +136,7 @@ const {
         activeToy = null;
       }
 
-      function launchToy(toy: string) {
+      function launchToy(toy: string, save = true) {
         if (toy === 'swarm') {
           triggerSwarmRebuild();
           activeToy = 'swarm';
@@ -148,14 +150,19 @@ const {
         if (activeToy === toy) {
           const g = (window as any)[config.global];
           if (g && typeof g.isRunning === 'function' && g.isRunning()) {
-            g.stop();
-            activeToy = null;
+            stopActiveToy();
             initActiveFunMode();
             return;
           }
         }
 
         stopActiveToy();
+
+        if (save) {
+          try {
+            sessionStorage.setItem('scushi_active_toy', toy);
+          } catch (_) {}
+        }
 
         const existingGlobal = (window as any)[config.global];
         if (existingGlobal && typeof existingGlobal.start === 'function') {
@@ -164,7 +171,7 @@ const {
           updateModeUI(toy);
         } else {
           const script = document.createElement('script');
-          script.src = `${config.src}?v=1`;
+          script.src = `${config.src}?v=3`;
           script.onload = () => {
             activeToy = toy;
             updateModeUI(toy);
@@ -175,7 +182,7 @@ const {
 
       function applyFunMode(mode: string, save = true) {
         if (mode === 'swarm' || TOY_CONFIGS[mode]) {
-          launchToy(mode);
+          launchToy(mode, save);
           return;
         }
 
@@ -187,6 +194,7 @@ const {
         if (save) {
           try {
             localStorage.setItem('scushi_fun_mode', targetMode);
+            sessionStorage.removeItem('scushi_active_toy');
           } catch (_) {}
         }
 
@@ -218,20 +226,24 @@ const {
       (window as any).stopActiveToy = stopActiveToy;
 
       function initActiveFunMode() {
-        let saved = 'spotlight';
+        let savedBg = 'spotlight';
         try {
-          saved = localStorage.getItem('scushi_fun_mode') || 'spotlight';
+          savedBg = localStorage.getItem('scushi_fun_mode') || 'spotlight';
         } catch (_) {}
-        applyFunMode(saved, false);
+        applyFunMode(savedBg, false);
+
+        // Check if an interactive toy was persistent across routes
+        let savedToy: string | null = null;
+        try {
+          savedToy = sessionStorage.getItem('scushi_active_toy');
+        } catch (_) {}
+        if (savedToy && TOY_CONFIGS[savedToy]) {
+          launchToy(savedToy, false);
+        }
       }
 
       initActiveFunMode();
       document.addEventListener('astro:page-load', initActiveFunMode);
-
-      // Clean up running toys on page navigation if swapping
-      document.addEventListener('astro:before-swap', () => {
-        stopActiveToy();
-      });
 
       // Swarm Rebuild Loader & Triggers (only when explicitly requested)
       function triggerSwarmRebuild() {
@@ -255,6 +267,9 @@ const {
       window.addEventListener('keydown', (e) => {
         if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        // If an interactive game or toy is active, DO NOT navigate away on 's' / 'h' / 'p'
+        if (activeToy && ['asteroids', 'gravity', 'katamari'].includes(activeToy)) return;
 
         const key = e.key.toLowerCase();
         const currentPath = window.location.pathname.replace(/\/$/, '') || '/';

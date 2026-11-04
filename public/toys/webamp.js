@@ -1,4 +1,4 @@
-// webamp.js - Embedded classic Winamp 2.9 for scushi.dev fun mode
+// webamp.js - Classic Winamp 2.9 player with Jono - Please Hold default autoplay for scushi.dev fun mode
 (function () {
   let webampInstance = null;
   let isRunning = false;
@@ -35,18 +35,18 @@
 
       container = document.createElement('div');
       container.id = 'webamp-app-root';
-      container.style.cssText = 'position:fixed;top:40px;right:40px;z-index:2147483640;';
+      container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:2147483640;';
       document.body.appendChild(container);
 
       webampInstance = new window.Webamp({
         initialTracks: [
           {
             metaData: {
-              artist: 'DJ Mike Llama',
-              title: "Llama Whippin' Intro",
+              artist: 'Jono',
+              title: 'Please Hold (Hermitcraft Permit Office Song)',
             },
-            url: 'https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82/packages/webamp/demo/mp3/llama-2.29.mp3',
-            duration: 5.322286,
+            url: '/toys/audio/please-hold.mp3',
+            duration: 172.5,
           },
         ],
         zIndex: 2147483640,
@@ -57,6 +57,13 @@
       });
 
       await webampInstance.renderWhenReady(container);
+
+      // Autoplay the default song
+      try {
+        await webampInstance.play();
+      } catch (e) {
+        console.warn('Autoplay waiting for user gesture:', e);
+      }
     } catch (err) {
       console.error('Failed to initialize Webamp:', err);
       stop();
@@ -78,6 +85,10 @@
       container.remove();
       container = null;
     }
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {

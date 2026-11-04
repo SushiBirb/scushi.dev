@@ -1,4 +1,4 @@
-// asteroids.js - Kickass-style DOM Destroyer game for scushi.dev fun mode
+// asteroids.js - Kickass-style DOM Destroyer game with vertical scrolling camera for scushi.dev fun mode
 (function () {
   let canvas = null;
   let ctx = null;
@@ -20,8 +20,8 @@
 
   function initShip() {
     return {
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
+      worldX: window.innerWidth / 2,
+      worldY: window.scrollY + window.innerHeight / 2,
       angle: -Math.PI / 2,
       vx: 0,
       vy: 0,
@@ -42,15 +42,15 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      background: rgba(10, 10, 10, 0.85);
-      border: 1px solid rgba(227, 194, 141, 0.4);
+      background: rgba(10, 10, 10, 0.9);
+      border: 1px solid rgba(227, 194, 141, 0.5);
       border-radius: 9999px;
       padding: 6px 18px;
       font-family: monospace;
       font-size: 11px;
       color: #e3c28d;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
       user-select: none;
       pointer-events: auto;
     `;
@@ -84,15 +84,15 @@
   function fireLaser() {
     if (!ship) return;
     const speed = 14;
-    const tipX = ship.x + Math.cos(ship.angle) * ship.radius * 1.4;
-    const tipY = ship.y + Math.sin(ship.angle) * ship.radius * 1.4;
+    const tipX = ship.worldX + Math.cos(ship.angle) * ship.radius * 1.4;
+    const tipY = ship.worldY + Math.sin(ship.angle) * ship.radius * 1.4;
 
     lasers.push({
-      x: tipX,
-      y: tipY,
+      worldX: tipX,
+      worldY: tipY,
       vx: Math.cos(ship.angle) * speed + ship.vx * 0.3,
       vy: Math.sin(ship.angle) * speed + ship.vy * 0.3,
-      life: 60,
+      life: 70,
     });
   }
 
@@ -101,16 +101,16 @@
     for (let i = 0; i < 36; i++) {
       const a = (i / 36) * Math.PI * 2;
       lasers.push({
-        x: ship.x,
-        y: ship.y,
+        worldX: ship.worldX,
+        worldY: ship.worldY,
         vx: Math.cos(a) * 12,
         vy: Math.sin(a) * 12,
-        life: 45,
+        life: 50,
       });
     }
   }
 
-  function shatterElement(el, hitX, hitY) {
+  function shatterElement(el, hitScreenX, hitScreenY) {
     if (el.dataset.astDestroyed === 'true') return;
     el.dataset.astDestroyed = 'true';
     destroyedElements.push(el);
@@ -125,17 +125,17 @@
     if (scoreEl) scoreEl.textContent = score.toLocaleString();
     if (countEl) countEl.textContent = destroyedCount.toString();
 
-    // Spawn physics debris
+    // Spawn physics debris in world space
     const shardCount = Math.min(24, Math.max(8, Math.floor((rect.width * rect.height) / 800)));
     for (let i = 0; i < shardCount; i++) {
-      const px = rect.left + Math.random() * rect.width;
-      const py = rect.top + Math.random() * rect.height;
-      const angle = Math.atan2(py - hitY, px - hitX) + (Math.random() - 0.5);
+      const sx = rect.left + Math.random() * rect.width;
+      const sy = rect.top + Math.random() * rect.height;
+      const angle = Math.atan2(sy - hitScreenY, sx - hitScreenX) + (Math.random() - 0.5);
       const speed = 2 + Math.random() * 6;
 
       particles.push({
-        x: px,
-        y: py,
+        worldX: sx,
+        worldY: sy + window.scrollY,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         size: 2 + Math.random() * 5,
@@ -152,17 +152,21 @@
       (el) => !el.closest('#asteroids-hud') && !el.closest('#fun-mode-dropdown-root') && el.dataset.astDestroyed !== 'true'
     );
 
+    const scrollY = window.scrollY;
+
     for (let i = lasers.length - 1; i >= 0; i--) {
       const l = lasers[i];
-      let hit = false;
+      const screenLx = l.worldX;
+      const screenLy = l.worldY - scrollY;
 
+      let hit = false;
       for (let j = 0; j < breakables.length; j++) {
         const el = breakables[j];
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) continue;
 
-        if (l.x >= r.left && l.x <= r.right && l.y >= r.top && l.y <= r.bottom) {
-          shatterElement(el, l.x, l.y);
+        if (screenLx >= r.left && screenLx <= r.right && screenLy >= r.top && screenLy <= r.bottom) {
+          shatterElement(el, screenLx, screenLy);
           hit = true;
           break;
         }
@@ -177,9 +181,9 @@
   function update() {
     if (!ship) return;
 
-    // Rotation
-    if (keys['ArrowLeft'] || keys['KeyA']) ship.angle -= 0.07;
-    if (keys['ArrowRight'] || keys['KeyD']) ship.angle += 0.07;
+    // Controlled, comfortable rotation speed (0.038 rad/frame)
+    if (keys['ArrowLeft'] || keys['KeyA']) ship.angle -= 0.038;
+    if (keys['ArrowRight'] || keys['KeyD']) ship.angle += 0.038;
 
     // Thrust
     ship.thrusting = keys['ArrowUp'] || keys['KeyW'];
@@ -188,11 +192,11 @@
       ship.vy += Math.sin(ship.angle) * 0.35;
 
       // Exhaust particle
-      const exX = ship.x - Math.cos(ship.angle) * (ship.radius + 2);
-      const exY = ship.y - Math.sin(ship.angle) * (ship.radius + 2);
+      const exX = ship.worldX - Math.cos(ship.angle) * (ship.radius + 2);
+      const exY = ship.worldY - Math.sin(ship.angle) * (ship.radius + 2);
       particles.push({
-        x: exX + (Math.random() - 0.5) * 4,
-        y: exY + (Math.random() - 0.5) * 4,
+        worldX: exX + (Math.random() - 0.5) * 4,
+        worldY: exY + (Math.random() - 0.5) * 4,
         vx: -Math.cos(ship.angle) * (3 + Math.random() * 3) + (Math.random() - 0.5) * 2,
         vy: -Math.sin(ship.angle) * (3 + Math.random() * 3) + (Math.random() - 0.5) * 2,
         size: 3 + Math.random() * 3,
@@ -206,24 +210,42 @@
     // Drag & Move
     ship.vx *= 0.98;
     ship.vy *= 0.98;
-    ship.x += ship.vx;
-    ship.y += ship.vy;
+    ship.worldX += ship.vx;
+    ship.worldY += ship.vy;
 
-    // Wrap around screen
+    // Horizontal wrap
     const w = window.innerWidth;
-    const h = window.innerHeight;
-    if (ship.x < 0) ship.x = w;
-    if (ship.x > w) ship.x = 0;
-    if (ship.y < 0) ship.y = h;
-    if (ship.y > h) ship.y = 0;
+    if (ship.worldX < 0) ship.worldX = w;
+    if (ship.worldX > w) ship.worldX = 0;
+
+    // Vertical Camera Tracking & Center-Lock
+    const docHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+    const viewHeight = window.innerHeight;
+    const maxScroll = Math.max(0, docHeight - viewHeight);
+
+    // Keep ship centered as long as page has scroll room
+    if (maxScroll > 0) {
+      const idealScroll = ship.worldY - viewHeight / 2;
+      const targetScroll = Math.max(0, Math.min(maxScroll, idealScroll));
+      window.scrollTo(0, targetScroll);
+    }
+
+    // Bounce off top and bottom limits of the entire document
+    if (ship.worldY < 14) {
+      ship.worldY = 14;
+      ship.vy = Math.abs(ship.vy) * 0.7;
+    } else if (ship.worldY > docHeight - 14) {
+      ship.worldY = docHeight - 14;
+      ship.vy = -Math.abs(ship.vy) * 0.7;
+    }
 
     // Update lasers
     for (let i = lasers.length - 1; i >= 0; i--) {
       const l = lasers[i];
-      l.x += l.vx;
-      l.y += l.vy;
+      l.worldX += l.vx;
+      l.worldY += l.vy;
       l.life--;
-      if (l.life <= 0 || l.x < 0 || l.x > w || l.y < 0 || l.y > h) {
+      if (l.life <= 0 || l.worldX < 0 || l.worldX > w || l.worldY < 0 || l.worldY > docHeight) {
         lasers.splice(i, 1);
       }
     }
@@ -231,9 +253,9 @@
     // Update particles
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.08; // subtle gravity
+      p.worldX += p.vx;
+      p.worldY += p.vy;
+      p.vy += 0.08;
       p.life--;
       p.alpha = p.life / p.maxLife;
       if (p.life <= 0) {
@@ -248,14 +270,20 @@
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    const scrollY = window.scrollY;
+
     // Draw Lasers
     ctx.save();
     for (const l of lasers) {
+      const sx = l.worldX;
+      const sy = l.worldY - scrollY;
+      if (sy < -20 || sy > canvas.height + 20) continue;
+
       ctx.fillStyle = '#ffea79';
       ctx.shadowColor = '#ffea79';
       ctx.shadowBlur = 8;
       ctx.beginPath();
-      ctx.arc(l.x, l.y, 2.5, 0, Math.PI * 2);
+      ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -263,22 +291,29 @@
     // Draw Particles
     ctx.save();
     for (const p of particles) {
+      const sx = p.worldX;
+      const sy = p.worldY - scrollY;
+      if (sy < -20 || sy > canvas.height + 20) continue;
+
       ctx.globalAlpha = p.alpha;
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size);
+      ctx.fillRect(sx, sy, p.size, p.size);
     }
     ctx.restore();
 
     // Draw Ship
     if (ship) {
+      const screenX = ship.worldX;
+      const screenY = ship.worldY - scrollY;
+
       ctx.save();
-      ctx.translate(ship.x, ship.y);
+      ctx.translate(screenX, screenY);
       ctx.rotate(ship.angle);
 
       // Ship wireframe
       ctx.strokeStyle = '#e3c28d';
       ctx.lineWidth = 2;
-      ctx.fillStyle = 'rgba(20, 20, 20, 0.85)';
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.9)';
       ctx.shadowColor = '#e3c28d';
       ctx.shadowBlur = 10;
 
@@ -335,6 +370,11 @@
     createHUD();
 
     keydownHandler = (e) => {
+      // Prevent navigation keys like 's' from escaping
+      if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'KeyB', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        e.stopPropagation();
+      }
+
       keys[e.code] = true;
       if (e.code === 'Space') {
         e.preventDefault();
@@ -351,6 +391,9 @@
     };
 
     keyupHandler = (e) => {
+      if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'KeyB', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        e.stopPropagation();
+      }
       keys[e.code] = false;
     };
 
@@ -361,8 +404,8 @@
       }
     };
 
-    window.addEventListener('keydown', keydownHandler);
-    window.addEventListener('keyup', keyupHandler);
+    window.addEventListener('keydown', keydownHandler, true);
+    window.addEventListener('keyup', keyupHandler, true);
     window.addEventListener('resize', resizeHandler);
 
     animId = window.requestAnimationFrame(loop);
@@ -374,11 +417,11 @@
       animId = null;
     }
     if (keydownHandler) {
-      window.removeEventListener('keydown', keydownHandler);
+      window.removeEventListener('keydown', keydownHandler, true);
       keydownHandler = null;
     }
     if (keyupHandler) {
-      window.removeEventListener('keyup', keyupHandler);
+      window.removeEventListener('keyup', keyupHandler, true);
       keyupHandler = null;
     }
     if (resizeHandler) {
@@ -402,6 +445,10 @@
     }
     destroyedElements = [];
     ship = null;
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {

@@ -1,4 +1,4 @@
-// ghost-cursors.js - Multi-segment spring physics cursor trail for scushi.dev fun mode
+// ghost-cursors.js - Smooth motion-blur ghost cursor trail for scushi.dev fun mode
 (function () {
   let canvas = null;
   let ctx = null;
@@ -8,10 +8,16 @@
   let resizeHandler = null;
   let isRunning = false;
 
-  const NUM_POINTS = 18;
-  let points = [];
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
+  let history = [];
+  let currentX = window.innerWidth / 2;
+  let currentY = window.innerHeight / 2;
+  let currentAngle = -Math.PI / 4;
+  let lastX = currentX;
+  let lastY = currentY;
+
+  // Delays for 8 ghost cursors (in milliseconds behind current time)
+  const GHOST_DELAYS = [70, 150, 240, 340, 460, 590, 740, 900];
+  const MAX_HISTORY_MS = 1800; // 1.8s persistent trail
 
   function createHUD() {
     hud = document.createElement('div');
@@ -37,7 +43,7 @@
       user-select: none;
     `;
     hud.innerHTML = `
-      <span><strong>GHOST CURSORS</strong>: 18-node spring physics trail</span>
+      <span><strong>GHOST CURSORS</strong>: 8-node motion wake</span>
       <button id="ghost-exit-btn" type="button" style="
         background: rgba(227, 194, 141, 0.15);
         border: 1px solid rgba(227, 194, 141, 0.4);
@@ -62,10 +68,10 @@
     ctx.globalAlpha = alpha;
 
     ctx.fillStyle = '#ffade4';
-    ctx.strokeStyle = '#111';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#111111';
+    ctx.lineWidth = 1.4;
     ctx.shadowColor = '#e3c28d';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 6;
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -82,6 +88,44 @@
     ctx.restore();
   }
 
+  function sampleHistory(targetTime) {
+    if (history.length === 0) return null;
+    if (targetTime >= history[history.length - 1].time) {
+      return history[history.length - 1];
+    }
+    if (targetTime <= history[0].time) {
+      return history[0];
+    }
+
+    // Binary search for time interval
+    let low = 0;
+    let high = history.length - 1;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      if (history[mid].time < targetTime) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    const i0 = Math.max(0, low - 1);
+    const i1 = Math.min(history.length - 1, low);
+    const p0 = history[i0];
+    const p1 = history[i1];
+
+    if (p0 === p1) return p0;
+
+    const span = p1.time - p0.time;
+    const t = span > 0 ? (targetTime - p0.time) / span : 0;
+
+    return {
+      x: p0.x + (p1.x - p0.x) * t,
+      y: p0.y + (p1.y - p0.y) * t,
+      angle: p1.angle,
+    };
+  }
+
   function start() {
     if (isRunning) return;
     isRunning = true;
@@ -94,22 +138,37 @@
     document.body.appendChild(canvas);
     ctx = canvas.getContext('2d');
 
-    points = [];
-    for (let i = 0; i < NUM_POINTS; i++) {
-      points.push({
-        x: mouseX,
-        y: mouseY,
-        vx: 0,
-        vy: 0,
-        angle: 0,
-      });
-    }
+    history = [];
+    const now = performance.now();
+    currentX = window.innerWidth / 2;
+    currentY = window.innerHeight / 2;
+    lastX = currentX;
+    lastY = currentY;
+    currentAngle = 0;
+    history.push({ x: currentX, y: currentY, angle: 0, time: now });
 
     createHUD();
 
     mousemoveHandler = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      currentX = e.clientX;
+      currentY = e.clientY;
+      const dx = currentX - lastX;
+      const dy = currentY - lastY;
+      const dist = Math.hypot(dx, dy);
+
+      // Only update orientation when moved significantly
+      if (dist > 4) {
+        currentAngle = Math.atan2(dy, dx) - Math.PI / 4;
+        lastX = currentX;
+        lastY = currentY;
+      }
+
+      history.push({
+        x: currentX,
+        y: currentY,
+        angle: currentAngle,
+        time: performance.now(),
+      });
     };
     window.addEventListener('mousemove', mousemoveHandler);
 
@@ -121,56 +180,65 @@
     };
     window.addEventListener('resize', resizeHandler);
 
-    function loop() {
+    function loop(now) {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Spring physics
-      let leadX = mouseX;
-      let leadY = mouseY;
-
-      for (let i = 0; i < NUM_POINTS; i++) {
-        const p = points[i];
-        const dx = leadX - p.x;
-        const dy = leadY - p.y;
-
-        const spring = 0.22 - (i / NUM_POINTS) * 0.08;
-        const damping = 0.65;
-
-        p.vx += dx * spring;
-        p.vy += dy * spring;
-        p.vx *= damping;
-        p.vy *= damping;
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        p.angle = Math.atan2(p.vy, p.vx) + Math.PI / 4;
-
-        leadX = p.x;
-        leadY = p.y;
+      // Prune history older than MAX_HISTORY_MS
+      const cutoff = now - MAX_HISTORY_MS;
+      while (history.length > 2 && history[0].time < cutoff) {
+        history.shift();
       }
 
-      // Draw connecting ribbon
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < NUM_POINTS; i++) {
-        const xc = (points[i].x + points[i - 1].x) / 2;
-        const yc = (points[i].y + points[i - 1].y) / 2;
-        ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
+      // Add a stationary frame if mouse hasn't moved
+      if (history.length > 0 && now - history[history.length - 1].time > 40) {
+        history.push({
+          x: currentX,
+          y: currentY,
+          angle: currentAngle,
+          time: now,
+        });
       }
-      ctx.strokeStyle = 'rgba(255, 173, 228, 0.25)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.restore();
 
-      // Draw cursors from tail to head
-      for (let i = NUM_POINTS - 1; i >= 0; i--) {
-        const p = points[i];
-        const scale = 1 - (i / NUM_POINTS) * 0.5;
-        const alpha = 1 - (i / NUM_POINTS) * 0.7;
-        drawCursor(ctx, p.x, p.y, p.angle, scale, alpha);
+      // 1. Draw glowing persistent wake ribbon
+      if (history.length > 3) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        for (let i = 1; i < history.length; i++) {
+          const pPrev = history[i - 1];
+          const pCur = history[i];
+          const age = now - pCur.time;
+          if (age > MAX_HISTORY_MS) continue;
+
+          const progress = 1 - age / MAX_HISTORY_MS; // 1 at head, 0 at tail
+          ctx.beginPath();
+          ctx.moveTo(pPrev.x, pPrev.y);
+          ctx.lineTo(pCur.x, pCur.y);
+
+          ctx.strokeStyle = `rgba(255, 173, 228, ${progress * 0.35})`;
+          ctx.lineWidth = 1 + progress * 4.5;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // 2. Draw 8 Ghost Cursors along the historical trail
+      for (let i = GHOST_DELAYS.length - 1; i >= 0; i--) {
+        const delay = GHOST_DELAYS[i];
+        const sample = sampleHistory(now - delay);
+        if (!sample) continue;
+
+        // Skip if ghost has caught up to the current mouse position
+        const distToMouse = Math.hypot(sample.x - currentX, sample.y - currentY);
+        if (distToMouse < 2) continue;
+
+        const progress = 1 - i / GHOST_DELAYS.length;
+        const scale = 0.65 + progress * 0.35;
+        const alpha = Math.min(0.85, 0.2 + progress * 0.65);
+
+        drawCursor(ctx, sample.x, sample.y, sample.angle, scale, alpha);
       }
 
       animId = window.requestAnimationFrame(loop);
@@ -204,6 +272,10 @@
       canvas = null;
       ctx = null;
     }
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {

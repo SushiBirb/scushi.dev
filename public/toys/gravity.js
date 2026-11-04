@@ -1,4 +1,4 @@
-// gravity.js - Google Gravity physics sandbox for scushi.dev fun mode
+// gravity.js - Google Gravity physics sandbox with box-box collisions for scushi.dev fun mode
 (function () {
   let animId = null;
   let hud = null;
@@ -36,11 +36,11 @@
       font-size: 11px;
       color: #e3c28d;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
       user-select: none;
     `;
     hud.innerHTML = `
-      <span><strong>GRAVITY MODE</strong>: Grab & fling elements</span>
+      <span><strong>GRAVITY MODE</strong>: Elements stack with collision. Click & fling!</span>
       <button id="grav-reset-btn" type="button" style="
         background: rgba(227, 194, 141, 0.15);
         border: 1px solid rgba(227, 194, 141, 0.4);
@@ -63,15 +63,13 @@
 
     createHUD();
 
-    // Collect elements to subject to gravity
-    const selector = '.project-card, article, section, h1, h2, h3, p, pre, blockquote, .system-status, #nav-home, a[href^="/"]';
+    const selector = '.project-card, article, section, h1, h2, h3, p, pre, blockquote, .system-status, nav a';
     const elements = Array.from(document.querySelectorAll(selector)).filter((el) => {
       if (el.closest('#gravity-hud') || el.closest('#fun-mode-dropdown-root') || el.closest('#asteroids-hud')) return false;
       const r = el.getBoundingClientRect();
-      return r.width > 30 && r.height > 15;
+      return r.width > 40 && r.height > 16;
     });
 
-    // Save initial inline styles and compute initial fixed layout
     bodies = elements.map((el) => {
       const r = el.getBoundingClientRect();
       const origStyle = el.getAttribute('style') || '';
@@ -94,14 +92,14 @@
         y: r.top,
         width: r.width,
         height: r.height,
-        vx: (Math.random() - 0.5) * 4,
-        vy: Math.random() * -3,
+        vx: 0,
+        vy: 0,
         angle: 0,
-        vAngle: (Math.random() - 0.5) * 0.04,
+        vAngle: 0,
+        isStatic: false,
       };
     });
 
-    // Mouse Dragging
     mousedownHandler = (e) => {
       const target = e.target.closest(selector);
       if (!target) return;
@@ -127,16 +125,16 @@
       if (draggedBody) {
         draggedBody.x = e.clientX - dragOffsetX;
         draggedBody.y = e.clientY - dragOffsetY;
-        draggedBody.vx = mouseVx * 0.8;
-        draggedBody.vy = mouseVy * 0.8;
+        draggedBody.vx = mouseVx * 0.7;
+        draggedBody.vy = mouseVy * 0.7;
       }
     };
 
     mouseupHandler = () => {
       if (draggedBody) {
         draggedBody.el.style.cursor = 'grab';
-        draggedBody.vx = mouseVx * 0.9;
-        draggedBody.vy = mouseVy * 0.9;
+        draggedBody.vx = mouseVx * 0.8;
+        draggedBody.vy = mouseVy * 0.8;
         draggedBody = null;
       }
     };
@@ -145,10 +143,57 @@
     window.addEventListener('mousemove', mousemoveHandler);
     window.addEventListener('mouseup', mouseupHandler);
 
+    function resolveCollisions() {
+      const n = bodies.length;
+      for (let i = 0; i < n; i++) {
+        const a = bodies[i];
+        for (let j = i + 1; j < n; j++) {
+          const b = bodies[j];
+
+          // AABB overlap check
+          const overlapX = (a.width + b.width) / 2 - Math.abs((a.x + a.width / 2) - (b.x + b.width / 2));
+          if (overlapX <= 0) continue;
+
+          const overlapY = (a.height + b.height) / 2 - Math.abs((a.y + a.height / 2) - (b.y + b.height / 2));
+          if (overlapY <= 0) continue;
+
+          // Resolve on axis of least penetration
+          if (overlapY < overlapX) {
+            // Vertical collision
+            const signY = a.y < b.y ? -1 : 1;
+            const sep = overlapY * 0.5;
+
+            if (a !== draggedBody) {
+              a.y += signY * sep;
+              a.vy *= -0.2;
+              a.vx *= 0.9;
+            }
+            if (b !== draggedBody) {
+              b.y -= signY * sep;
+              b.vy *= -0.2;
+              b.vx *= 0.9;
+            }
+          } else {
+            // Horizontal collision
+            const signX = a.x < b.x ? -1 : 1;
+            const sep = overlapX * 0.5;
+
+            if (a !== draggedBody) {
+              a.x += signX * sep;
+              a.vx *= -0.3;
+            }
+            if (b !== draggedBody) {
+              b.x -= signX * sep;
+              b.vx *= -0.3;
+            }
+          }
+        }
+      }
+    }
+
     function loop() {
-      const gravity = 0.55;
-      const bounce = 0.4;
-      const friction = 0.94;
+      const gravity = 0.6;
+      const friction = 0.95;
       const floor = window.innerHeight;
       const rightWall = window.innerWidth;
 
@@ -162,33 +207,39 @@
         b.vy += gravity;
         b.vx *= friction;
         b.vy *= 0.99;
-        b.vAngle *= 0.95;
+        b.vAngle *= 0.9;
 
         b.x += b.vx;
         b.y += b.vy;
         b.angle += b.vAngle;
 
-        // Bottom floor collision
+        // Floor boundary
         if (b.y + b.height >= floor) {
           b.y = floor - b.height;
-          b.vy = -b.vy * bounce;
-          b.vx *= 0.85;
-          b.vAngle *= 0.8;
-          if (Math.abs(b.vy) < 0.5) b.vy = 0;
+          b.vy = -b.vy * 0.25;
+          b.vx *= 0.8;
+          b.vAngle *= 0.7;
+          if (Math.abs(b.vy) < 0.8) b.vy = 0;
         }
 
-        // Left wall
+        // Left boundary
         if (b.x < 0) {
           b.x = 0;
-          b.vx = -b.vx * bounce;
+          b.vx = -b.vx * 0.3;
         }
 
-        // Right wall
+        // Right boundary
         if (b.x + b.width > rightWall) {
           b.x = rightWall - b.width;
-          b.vx = -b.vx * bounce;
+          b.vx = -b.vx * 0.3;
         }
+      }
 
+      // 2 iterations of collision resolution for stability
+      resolveCollisions();
+      resolveCollisions();
+
+      for (const b of bodies) {
         b.el.style.left = `${b.x}px`;
         b.el.style.top = `${b.y}px`;
         b.el.style.transform = `rotate(${b.angle}rad)`;
@@ -221,7 +272,6 @@
       hud = null;
     }
 
-    // Reset styles
     for (const b of bodies) {
       if (b.origStyle) {
         b.el.setAttribute('style', b.origStyle);
@@ -231,6 +281,10 @@
     }
     bodies = [];
     draggedBody = null;
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {

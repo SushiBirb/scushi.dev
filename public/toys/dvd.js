@@ -1,4 +1,4 @@
-// dvd.js - Bouncing DVD Logo screensaver with corner hit detection for scushi.dev fun mode
+// dvd.js - Bouncing DVD Logo screensaver with 24 vibrant colors for scushi.dev fun mode
 (function () {
   let canvas = null;
   let ctx = null;
@@ -19,7 +19,13 @@
   let cornerHits = 0;
   let confetti = [];
 
-  const COLORS = ['#ff4081', '#00e5ff', '#ffeb3b', '#76ff03', '#d500f9', '#ff9100', '#ffffff'];
+  const COLORS = [
+    '#ff0055', '#ff3399', '#ff00cc', '#9d00ff', '#651fff',
+    '#2979ff', '#00b0ff', '#00e5ff', '#1de9b6', '#00e676',
+    '#76ff03', '#c6ff00', '#ffea00', '#ffd600', '#ff9100',
+    '#ff3d00', '#ff1744', '#f43f5e', '#ec4899', '#a855f7',
+    '#06b6d4', '#10b981', '#e3c28d', '#ffffff'
+  ];
   let currentColor = COLORS[0];
 
   function playTone(freq) {
@@ -54,6 +60,16 @@
     }
   }
 
+  function pickNextColor() {
+    let next;
+    do {
+      next = COLORS[Math.floor(Math.random() * COLORS.length)];
+    } while (next === currentColor && COLORS.length > 1);
+    currentColor = next;
+    const dot = document.getElementById('dvd-color-dot');
+    if (dot) dot.style.background = currentColor;
+  }
+
   function createHUD() {
     hud = document.createElement('div');
     hud.id = 'dvd-hud';
@@ -65,7 +81,7 @@
       z-index: 2147483646;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       background: rgba(15, 15, 15, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 9999px;
@@ -74,16 +90,29 @@
       font-size: 11px;
       color: #fff;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
       user-select: none;
     `;
     hud.innerHTML = `
       <span><strong>DVD SCREENSAVER</strong></span>
       <span>BOUNCES: <strong id="dvd-bounces">0</strong></span>
-      <span>CORNER HITS: <strong id="dvd-corners" style="color: #ffeb3b;">0</strong></span>
+      <span>CORNERS: <strong id="dvd-corners" style="color: #ffeb3b;">0</strong></span>
+      <button id="dvd-color-btn" type="button" style="
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.25);
+        color: #fff;
+        border-radius: 4px;
+        padding: 2px 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: monospace;
+        font-size: 10px;
+      "><span id="dvd-color-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${currentColor}"></span> Color</button>
       <button id="dvd-exit-btn" type="button" style="
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         color: #fff;
         border-radius: 4px;
         padding: 2px 8px;
@@ -95,13 +124,13 @@
     document.body.appendChild(hud);
 
     hud.querySelector('#dvd-exit-btn').addEventListener('click', stop);
+    hud.querySelector('#dvd-color-btn').addEventListener('click', pickNextColor);
   }
 
   function drawDVDLogo(ctx, px, py, color) {
     ctx.save();
     ctx.translate(px, py);
 
-    // Oval base disk
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = 3;
@@ -149,7 +178,7 @@
     bounces = 0;
     cornerHits = 0;
     confetti = [];
-    currentColor = COLORS[0];
+    pickNextColor();
 
     createHUD();
 
@@ -195,13 +224,11 @@
 
       if (hitX || hitY) {
         bounces++;
-        const nextColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-        currentColor = nextColor;
+        pickNextColor();
         const bEl = document.getElementById('dvd-bounces');
         if (bEl) bEl.textContent = bounces.toString();
 
         if (hitX && hitY) {
-          // CORNER HIT!
           cornerHits++;
           const cEl = document.getElementById('dvd-corners');
           if (cEl) cEl.textContent = cornerHits.toString();
@@ -257,6 +284,10 @@
       canvas = null;
       ctx = null;
     }
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {

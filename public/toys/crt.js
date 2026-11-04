@@ -1,32 +1,37 @@
-// crt.js - Retro CRT Terminal Shader & Mechanical Clicker for scushi.dev fun mode
+// crt.js - Real animated CRT Monitor Shader with moving scanline beam for scushi.dev fun mode
 (function () {
-  let overlay = null;
+  let canvas = null;
+  let ctx = null;
   let hud = null;
-  let isRunning = false;
+  let animId = null;
+  let resizeHandler = null;
   let keyHandler = null;
   let audioCtx = null;
+  let isRunning = false;
+
+  let sweepY = 0;
   let currentPhosphor = 'amber';
 
   const PHOSPHORS = {
     amber: {
       name: 'Amber (P3)',
-      filter: 'sepia(1) saturate(3) hue-rotate(345deg) brightness(0.95) contrast(1.15)',
-      glow: 'rgba(255, 176, 0, 0.15)',
+      filter: 'sepia(1) saturate(3.5) hue-rotate(345deg) brightness(0.95) contrast(1.15)',
+      sweepColor: 'rgba(255, 176, 0, 0.08)',
     },
     green: {
       name: 'Phosphor Green (P1)',
       filter: 'sepia(1) saturate(5) hue-rotate(75deg) brightness(0.9) contrast(1.2)',
-      glow: 'rgba(51, 255, 51, 0.18)',
+      sweepColor: 'rgba(51, 255, 51, 0.09)',
     },
     cyan: {
       name: 'Cyber Cyan',
       filter: 'sepia(1) saturate(4) hue-rotate(145deg) brightness(0.95) contrast(1.15)',
-      glow: 'rgba(0, 240, 255, 0.15)',
+      sweepColor: 'rgba(0, 240, 255, 0.08)',
     },
     mono: {
       name: 'Monochrome (P4)',
-      filter: 'grayscale(1) brightness(1.1) contrast(1.3)',
-      glow: 'rgba(255, 255, 255, 0.12)',
+      filter: 'grayscale(1) brightness(1.1) contrast(1.25)',
+      sweepColor: 'rgba(255, 255, 255, 0.07)',
     },
   };
 
@@ -42,7 +47,7 @@
       osc.frequency.setValueAtTime(140 + Math.random() * 80, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.04);
 
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
 
       osc.connect(gain);
@@ -87,7 +92,7 @@
         cursor: pointer;
         font-family: monospace;
         font-size: 10px;
-      ">Color: <span id="crt-phos-name">Amber</span></button>
+      ">Phosphor: <span id="crt-phos-name">Amber</span></button>
       <button id="crt-exit-btn" type="button" style="
         background: rgba(255,255,255,0.1);
         border: 1px solid rgba(255,255,255,0.2);
@@ -119,26 +124,65 @@
     document.documentElement.style.filter = p.filter;
   }
 
+  function drawCRTShader() {
+    if (!ctx || !canvas) return;
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // 1. Moving Cathode Ray Sweep Beam (rolls down every ~3.5 seconds)
+    sweepY = (sweepY + 2.5) % (h + 80);
+    const p = PHOSPHORS[currentPhosphor];
+
+    const sweepGrad = ctx.createLinearGradient(0, sweepY - 40, 0, sweepY + 40);
+    sweepGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    sweepGrad.addColorStop(0.5, p.sweepColor);
+    sweepGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = sweepGrad;
+    ctx.fillRect(0, sweepY - 40, w, 80);
+
+    // 2. High-density alternating scanline raster (2px pitch)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+    for (let y = 0; y < h; y += 3) {
+      ctx.fillRect(0, y, w, 1);
+    }
+
+    // 3. Subtle curved tube vignette & edge shadow
+    const radGrad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.45, w / 2, h / 2, Math.max(w, h) * 0.72);
+    radGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    radGrad.addColorStop(0.75, 'rgba(0, 0, 0, 0.35)');
+    radGrad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+    ctx.fillStyle = radGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // 4. Subtle phosphor grain noise (randomized flicker)
+    if (Math.random() > 0.3) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.01 + Math.random() * 0.015})`;
+      for (let i = 0; i < 40; i++) {
+        const nx = Math.random() * w;
+        const ny = Math.random() * h;
+        ctx.fillRect(nx, ny, 2, 1);
+      }
+    }
+  }
+
+  function loop() {
+    drawCRTShader();
+    animId = window.requestAnimationFrame(loop);
+  }
+
   function start() {
     if (isRunning) return;
     isRunning = true;
 
-    // Inject CRT Scanlines & Bezel Overlay
-    overlay = document.createElement('div');
-    overlay.id = 'crt-overlay';
-    overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 2147483630;
-      background:
-        radial-gradient(circle at center, transparent 65%, rgba(0, 0, 0, 0.6) 100%),
-        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      background-size: 100% 100%, 100% 3px, 3px 100%;
-      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.85);
-    `;
-    document.body.appendChild(overlay);
+    canvas = document.createElement('canvas');
+    canvas.id = 'crt-shader-canvas';
+    canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483630;width:100%;height:100%;';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    ctx = canvas.getContext('2d');
 
     createHUD();
     applyPhosphor();
@@ -147,17 +191,32 @@
       playKeyClick();
       if (e.key === 'Escape') stop();
     };
+    resizeHandler = () => {
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    };
+
     window.addEventListener('keydown', keyHandler);
     window.addEventListener('click', playKeyClick);
+    window.addEventListener('resize', resizeHandler);
+
+    animId = window.requestAnimationFrame(loop);
   }
 
   function stop() {
     if (!isRunning) return;
     isRunning = false;
 
-    if (overlay) {
-      overlay.remove();
-      overlay = null;
+    if (animId) {
+      window.cancelAnimationFrame(animId);
+      animId = null;
+    }
+    if (canvas) {
+      canvas.remove();
+      canvas = null;
+      ctx = null;
     }
     if (hud) {
       hud.remove();
@@ -168,7 +227,15 @@
       window.removeEventListener('click', playKeyClick);
       keyHandler = null;
     }
+    if (resizeHandler) {
+      window.removeEventListener('resize', resizeHandler);
+      resizeHandler = null;
+    }
     document.documentElement.style.filter = '';
+
+    try {
+      sessionStorage.removeItem('scushi_active_toy');
+    } catch (_) {}
   }
 
   function toggle() {
