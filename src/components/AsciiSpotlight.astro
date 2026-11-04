@@ -84,9 +84,22 @@
         const scrollRowOffset = Math.floor(window.scrollY / charH);
         const totalDocHeight = Math.max(document.documentElement.scrollHeight, 1200);
 
+        const centerX = width / 2;
+        const contentHalfWidth = 390; // Center content column (~768px max-w-3xl)
+
         for (let c = minCol; c <= maxCol; c++) {
           const x = c * charW;
           const dx = mouseX - x;
+          const distFromCenter = Math.abs(x - centerX);
+
+          // Center masking: keep the text column ultra-clean and dim, let margins be more atmospheric
+          let columnAlphaMult = 1;
+          if (distFromCenter < contentHalfWidth) {
+            columnAlphaMult = 0.20; // Very faint behind content
+          } else {
+            // Fade in toward outer margins
+            columnAlphaMult = Math.min(0.20 + (distFromCenter - contentHalfWidth) / 220, 1.0);
+          }
 
           for (let r = minRow; r <= maxRow; r++) {
             const y = r * charH;
@@ -144,9 +157,9 @@
             const intensity = Math.pow(1 - dist / spotlightRadius, 1.4);
             // Slightly deeper opacity at lower depths to complement density
             const baseMaxAlpha = 0.55 + depth * 0.2;
-            const alpha = intensity * baseMaxAlpha;
+            const alpha = intensity * baseMaxAlpha * columnAlphaMult;
 
-            if (alpha <= 0.02) continue;
+            if (alpha <= 0.015) continue;
 
             ctx!.fillStyle = color;
             ctx!.globalAlpha = alpha;
