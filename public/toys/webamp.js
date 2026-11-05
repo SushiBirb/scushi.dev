@@ -35,7 +35,10 @@
 
       container = document.createElement('div');
       container.id = 'webamp-app-root';
-      container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:2147483640;';
+      const isMobile = window.innerWidth < 480;
+      container.style.cssText = isMobile
+        ? 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:2147483640;'
+        : 'position:fixed;bottom:20px;right:20px;z-index:2147483640;';
       document.body.appendChild(container);
 
       webampInstance = new window.Webamp({

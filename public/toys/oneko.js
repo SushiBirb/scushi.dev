@@ -3,6 +3,7 @@
   let nekoEl = null;
   let animId = null;
   let mouseMoveHandler = null;
+  let touchMoveHandler = null;
 
   let nekoPosX = 32;
   let nekoPosY = 32;
@@ -156,6 +157,15 @@
       mousePosY = e.clientY;
     };
     window.addEventListener("mousemove", mouseMoveHandler, { passive: true });
+
+    touchMoveHandler = (e) => {
+      if (e.touches && e.touches[0]) {
+        mousePosX = e.touches[0].clientX;
+        mousePosY = e.touches[0].clientY;
+      }
+    };
+    window.addEventListener("touchmove", touchMoveHandler, { passive: true });
+    window.addEventListener("touchstart", touchMoveHandler, { passive: true });
     animId = window.requestAnimationFrame(onAnimationFrame);
   }
 
@@ -167,6 +177,11 @@
     if (mouseMoveHandler) {
       window.removeEventListener("mousemove", mouseMoveHandler);
       mouseMoveHandler = null;
+    }
+    if (touchMoveHandler) {
+      window.removeEventListener("touchmove", touchMoveHandler);
+      window.removeEventListener("touchstart", touchMoveHandler);
+      touchMoveHandler = null;
     }
     if (nekoEl) {
       nekoEl.remove();

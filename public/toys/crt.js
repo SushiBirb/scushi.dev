@@ -63,17 +63,21 @@
     hud.id = 'crt-hud';
     hud.style.cssText = `
       position: fixed;
-      top: 16px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 2147483646;
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(10, 10, 10, 0.9);
+      gap: 10px;
+      max-width: calc(100% - 24px);
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      justify-content: center;
+      background: rgba(10, 10, 10, 0.92);
       border: 1px solid rgba(255, 176, 0, 0.5);
       border-radius: 9999px;
-      padding: 6px 18px;
+      padding: 5px 14px;
       font-family: monospace;
       font-size: 11px;
       color: #ffb000;

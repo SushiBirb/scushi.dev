@@ -5,6 +5,7 @@
   let hud = null;
   let animId = null;
   let mousemoveHandler = null;
+  let touchHandler = null;
   let resizeHandler = null;
   let isRunning = false;
 
@@ -24,17 +25,21 @@
     hud.id = 'ghost-hud';
     hud.style.cssText = `
       position: fixed;
-      top: 16px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 2147483646;
       display: flex;
       align-items: center;
       gap: 12px;
-      background: rgba(15, 15, 15, 0.9);
+      max-width: calc(100% - 24px);
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      justify-content: center;
+      background: rgba(15, 15, 15, 0.92);
       border: 1px solid rgba(227, 194, 141, 0.4);
       border-radius: 9999px;
-      padding: 6px 18px;
+      padding: 5px 14px;
       font-family: monospace;
       font-size: 11px;
       color: #e3c28d;
@@ -172,6 +177,31 @@
     };
     window.addEventListener('mousemove', mousemoveHandler);
 
+    touchHandler = (e) => {
+      if (e.touches && e.touches[0]) {
+        currentX = e.touches[0].clientX;
+        currentY = e.touches[0].clientY;
+        const dx = currentX - lastX;
+        const dy = currentY - lastY;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist > 4) {
+          currentAngle = Math.atan2(dy, dx) - Math.PI / 4;
+          lastX = currentX;
+          lastY = currentY;
+        }
+
+        history.push({
+          x: currentX,
+          y: currentY,
+          angle: currentAngle,
+          time: performance.now(),
+        });
+      }
+    };
+    window.addEventListener('touchmove', touchHandler, { passive: true });
+    window.addEventListener('touchstart', touchHandler, { passive: true });
+
     resizeHandler = () => {
       if (canvas) {
         canvas.width = window.innerWidth;
@@ -258,6 +288,11 @@
     if (mousemoveHandler) {
       window.removeEventListener('mousemove', mousemoveHandler);
       mousemoveHandler = null;
+    }
+    if (touchHandler) {
+      window.removeEventListener('touchmove', touchHandler);
+      window.removeEventListener('touchstart', touchHandler);
+      touchHandler = null;
     }
     if (resizeHandler) {
       window.removeEventListener('resize', resizeHandler);

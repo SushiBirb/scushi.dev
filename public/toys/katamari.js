@@ -5,6 +5,7 @@
   let hud = null;
   let animId = null;
   let mousemoveHandler = null;
+  let touchHandler = null;
   let isRunning = false;
 
   let ballX = window.innerWidth / 2;
@@ -22,17 +23,21 @@
     hud.id = 'katamari-hud';
     hud.style.cssText = `
       position: fixed;
-      top: 16px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 2147483646;
       display: flex;
       align-items: center;
-      gap: 14px;
-      background: rgba(15, 15, 15, 0.9);
+      gap: 12px;
+      max-width: calc(100% - 24px);
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      justify-content: center;
+      background: rgba(15, 15, 15, 0.92);
       border: 1px solid rgba(255, 173, 228, 0.5);
       border-radius: 9999px;
-      padding: 6px 18px;
+      padding: 5px 14px;
       font-family: monospace;
       font-size: 11px;
       color: #ffade4;
@@ -42,13 +47,13 @@
     `;
     hud.innerHTML = `
       <span><strong>KATAMARI</strong>: <span id="kat-size">0.28m</span> (<span id="kat-count">0</span> items)</span>
-      <span style="color: #666;">| Move cursor to roll</span>
+      <span class="hidden sm:inline" style="color: #666;">| Move / touch to roll</span>
       <button id="kat-exit-btn" type="button" style="
         background: rgba(255, 173, 228, 0.15);
         border: 1px solid rgba(255, 173, 228, 0.4);
         color: #fff;
         border-radius: 4px;
-        padding: 3px 10px;
+        padding: 2px 8px;
         cursor: pointer;
         font-family: monospace;
         font-size: 10px;
@@ -87,6 +92,15 @@
       targetY = e.clientY;
     };
     window.addEventListener('mousemove', mousemoveHandler);
+
+    touchHandler = (e) => {
+      if (e.touches && e.touches[0]) {
+        targetX = e.touches[0].clientX;
+        targetY = e.touches[0].clientY;
+      }
+    };
+    window.addEventListener('touchmove', touchHandler, { passive: true });
+    window.addEventListener('touchstart', touchHandler, { passive: true });
 
     function checkCollision() {
       // Pick up compact elements only (headings, links, tags, buttons, code blocks, spans)
@@ -239,6 +253,11 @@
     if (mousemoveHandler) {
       window.removeEventListener('mousemove', mousemoveHandler);
       mousemoveHandler = null;
+    }
+    if (touchHandler) {
+      window.removeEventListener('touchmove', touchHandler);
+      window.removeEventListener('touchstart', touchHandler);
+      touchHandler = null;
     }
 
     if (hud) {

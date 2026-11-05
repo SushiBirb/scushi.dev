@@ -8,6 +8,9 @@
   let scrollHandler = null;
   let wheelHandler = null;
   let keyHandler = null;
+  let touchStartHandler = null;
+  let touchMoveHandler = null;
+  let touchStartY = 0;
 
   // States: 'STANDBY', 'AT_BOTTOM', 'ASCENDING', 'ARRIVED'
   let state = 'STANDBY';
@@ -127,14 +130,18 @@
     hud.id = 'elevator-hud';
     hud.style.cssText = `
       position: fixed;
-      top: 20px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 2147483647;
       background: rgba(18, 18, 18, 0.95);
       border: 1px solid rgba(227, 194, 141, 0.6);
       border-radius: 9999px;
-      padding: 8px 22px;
+      padding: 6px 16px;
+      max-width: calc(100% - 24px);
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      justify-content: center;
       font-family: monospace;
       font-size: 11px;
       color: #e3c28d;
@@ -142,12 +149,24 @@
       box-shadow: 0 4px 25px rgba(0,0,0,0.6);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       letter-spacing: 0.5px;
       user-select: none;
     `;
     hud.innerHTML = `
-      <span id="elev-status-text">🛗 <strong>ELEVATOR STANDBY:</strong> Scroll all the way down to board</span>
+      <span id="elev-status-text">🛗 <strong>ELEVATOR:</strong> Scroll down to ground floor</span>
+      <button id="elev-ascend-btn" type="button" style="
+        display: none;
+        background: rgba(227, 194, 141, 0.2);
+        border: 1px solid rgba(227, 194, 141, 0.7);
+        color: #ffea79;
+        border-radius: 4px;
+        padding: 2px 8px;
+        cursor: pointer;
+        font-family: monospace;
+        font-size: 10px;
+        font-weight: bold;
+      ">Ascend ▲</button>
       <button id="elev-exit-btn" type="button" style="
         background: rgba(255,255,255,0.1);
         border: 1px solid rgba(255,255,255,0.25);
@@ -161,6 +180,7 @@
     `;
     document.body.appendChild(hud);
     hud.querySelector('#elev-exit-btn').addEventListener('click', stop);
+    hud.querySelector('#elev-ascend-btn').addEventListener('click', startAscent);
 
     // Check if user is at the bottom
     function checkBottom() {
@@ -172,8 +192,10 @@
         playDingDong();
         const hudText = document.getElementById('elev-status-text');
         if (hudText) {
-          hudText.innerHTML = '🛗 <strong>DOORS CLOSED (Ground Floor):</strong> Try scrolling up to ascend!';
+          hudText.innerHTML = '🛗 <strong>DOORS CLOSED:</strong> Swipe/Scroll up to ascend';
         }
+        const ascendBtn = document.getElementById('elev-ascend-btn');
+        if (ascendBtn) ascendBtn.style.display = 'inline-block';
       }
     }
 
@@ -200,9 +222,32 @@
       }
     };
 
+    touchStartHandler = (e) => {
+      if (e.touches && e.touches[0]) {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+
+    touchMoveHandler = (e) => {
+      if (state === 'ASCENDING') {
+        e.preventDefault();
+        return;
+      }
+      if (state === 'AT_BOTTOM' && e.touches && e.touches[0]) {
+        const deltaY = e.touches[0].clientY - touchStartY;
+        // User dragged finger downwards by > 20px, attempting to scroll up
+        if (deltaY > 20) {
+          e.preventDefault();
+          startAscent();
+        }
+      }
+    };
+
     window.addEventListener('scroll', scrollHandler, { passive: true });
     window.addEventListener('wheel', wheelHandler, { passive: false });
     window.addEventListener('keydown', keyHandler, false);
+    window.addEventListener('touchstart', touchStartHandler, { passive: true });
+    window.addEventListener('touchmove', touchMoveHandler, { passive: false });
 
     checkBottom();
   }
@@ -233,6 +278,14 @@
     if (keyHandler) {
       window.removeEventListener('keydown', keyHandler);
       keyHandler = null;
+    }
+    if (touchStartHandler) {
+      window.removeEventListener('touchstart', touchStartHandler);
+      touchStartHandler = null;
+    }
+    if (touchMoveHandler) {
+      window.removeEventListener('touchmove', touchMoveHandler);
+      touchMoveHandler = null;
     }
     if (hud) {
       hud.remove();

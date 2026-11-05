@@ -184,9 +184,34 @@
       mouseY = -9999;
     }
 
+    let touchFadeTimer: number | null = null;
+    function onTouch(e: TouchEvent) {
+      if (e.touches && e.touches[0]) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+        isMouseInWindow = true;
+        if (touchFadeTimer) {
+          clearTimeout(touchFadeTimer);
+          touchFadeTimer = null;
+        }
+      }
+    }
+
+    function onTouchEnd() {
+      if (touchFadeTimer) clearTimeout(touchFadeTimer);
+      touchFadeTimer = window.setTimeout(() => {
+        isMouseInWindow = false;
+        mouseX = -9999;
+        mouseY = -9999;
+      }, 800);
+    }
+
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMouseMove, { passive: true });
     document.addEventListener('mouseleave', onMouseLeave);
+    window.addEventListener('touchmove', onTouch, { passive: true });
+    window.addEventListener('touchstart', onTouch, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     resize();
     animationFrameId = requestAnimationFrame(render);
@@ -195,6 +220,10 @@
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('touchmove', onTouch);
+      window.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('touchend', onTouchEnd);
+      if (touchFadeTimer) clearTimeout(touchFadeTimer);
       cancelAnimationFrame(animationFrameId);
     };
   }

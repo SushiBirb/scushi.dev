@@ -65,7 +65,7 @@ const isSystems = pathname === '/systems';
       <!-- Dropdown Menu -->
       <div
         id="fun-mode-menu"
-        class="hidden absolute right-0 mt-2 w-64 max-h-[82vh] overflow-y-auto bg-neutral-900/95 border border-neutral-800/90 rounded-xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in text-xs font-mono select-none"
+        class="hidden absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] max-h-[82vh] overflow-y-auto bg-neutral-900/95 border border-neutral-800/90 rounded-xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in text-xs font-mono select-none"
       >
         <div class="px-2.5 py-1 text-[10px] uppercase tracking-wider text-neutral-500 border-b border-neutral-800/60 mb-1 flex items-center justify-between">
           <span>ambient background</span>
@@ -347,11 +347,14 @@ const isSystems = pathname === '/systems';
       }
     });
 
-    document.addEventListener('click', (e) => {
+    const handleOutside = (e: Event) => {
       if (root && !root.contains(e.target as Node)) {
         closeMenu();
       }
-    });
+    };
+
+    document.addEventListener('click', handleOutside);
+    document.addEventListener('touchstart', handleOutside, { passive: true });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeMenu();

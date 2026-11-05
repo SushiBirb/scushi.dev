@@ -3,6 +3,7 @@
   let canvas = null;
   let ctx = null;
   let hud = null;
+  let touchControls = null;
   let animId = null;
   let keydownHandler = null;
   let keyupHandler = null;
@@ -35,17 +36,21 @@
     hud.id = 'asteroids-hud';
     hud.style.cssText = `
       position: fixed;
-      top: 16px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 2147483645;
       display: flex;
       align-items: center;
-      gap: 16px;
-      background: rgba(10, 10, 10, 0.9);
+      gap: 12px;
+      max-width: calc(100% - 24px);
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      justify-content: center;
+      background: rgba(10, 10, 10, 0.92);
       border: 1px solid rgba(227, 194, 141, 0.5);
       border-radius: 9999px;
-      padding: 6px 18px;
+      padding: 5px 14px;
       font-family: monospace;
       font-size: 11px;
       color: #e3c28d;
@@ -60,9 +65,9 @@
         <span style="color: #666;">|</span>
         <span>SCORE: <strong id="ast-score" style="color: #fff;">0</strong></span>
         <span style="color: #666;">|</span>
-        <span>DESTROYED: <strong id="ast-count" style="color: #fff;">0</strong></span>
+        <span>KILLS: <strong id="ast-count" style="color: #fff;">0</strong></span>
       </div>
-      <div style="color: #888; font-size: 10px;">
+      <div class="hidden sm:block" style="color: #888; font-size: 10px;">
         [WASD/Arrows] Fly · [Space] Shoot · [B] Bomb · [Esc]
       </div>
       <button id="ast-exit-btn" type="button" style="
@@ -79,6 +84,123 @@
     document.body.appendChild(hud);
 
     hud.querySelector('#ast-exit-btn').addEventListener('click', stop);
+  }
+
+  function createTouchControls() {
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
+    if (!isTouch) return;
+
+    touchControls = document.createElement('div');
+    touchControls.id = 'asteroids-touch-controls';
+    touchControls.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2147483645;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: calc(100% - 28px);
+      max-width: 400px;
+      justify-content: space-between;
+      user-select: none;
+      pointer-events: auto;
+      touch-action: none;
+    `;
+
+    touchControls.innerHTML = `
+      <div style="display: flex; gap: 8px;">
+        <button id="ast-touch-left" type="button" aria-label="Steer Left" style="
+          width: 48px; height: 48px; border-radius: 50%;
+          background: rgba(18, 18, 18, 0.88); border: 1.5px solid rgba(227, 194, 141, 0.55);
+          color: #e3c28d; font-size: 20px; display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(8px); cursor: pointer;
+        ">⟲</button>
+        <button id="ast-touch-right" type="button" aria-label="Steer Right" style="
+          width: 48px; height: 48px; border-radius: 50%;
+          background: rgba(18, 18, 18, 0.88); border: 1.5px solid rgba(227, 194, 141, 0.55);
+          color: #e3c28d; font-size: 20px; display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(8px); cursor: pointer;
+        ">⟳</button>
+      </div>
+
+      <div>
+        <button id="ast-touch-thrust" type="button" aria-label="Thrust Forward" style="
+          width: 56px; height: 56px; border-radius: 50%;
+          background: rgba(227, 194, 141, 0.18); border: 2px solid rgba(227, 194, 141, 0.85);
+          color: #ffea79; font-size: 22px; display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.7); backdrop-filter: blur(8px); cursor: pointer;
+        ">▲</button>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button id="ast-touch-fire" type="button" aria-label="Fire Laser" style="
+          width: 50px; height: 50px; border-radius: 50%;
+          background: rgba(255, 107, 53, 0.22); border: 2px solid rgba(255, 107, 53, 0.85);
+          color: #ff8c3b; font-size: 11px; font-weight: bold; font-family: monospace;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(8px); cursor: pointer;
+        ">FIRE</button>
+        <button id="ast-touch-bomb" type="button" aria-label="Fire Bomb" style="
+          width: 44px; height: 44px; border-radius: 50%;
+          background: rgba(255, 173, 228, 0.18); border: 1.5px solid rgba(255, 173, 228, 0.7);
+          color: #ffade4; font-size: 16px; display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(8px); cursor: pointer;
+        ">💣</button>
+      </div>
+    `;
+
+    document.body.appendChild(touchControls);
+
+    const bindHold = (btnId, keyName) => {
+      const btn = touchControls.querySelector(btnId);
+      if (!btn) return;
+      const onStart = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keys[keyName] = true;
+        btn.style.transform = 'scale(0.92)';
+      };
+      const onEnd = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keys[keyName] = false;
+        btn.style.transform = 'scale(1)';
+      };
+      btn.addEventListener('touchstart', onStart, { passive: false });
+      btn.addEventListener('touchend', onEnd, { passive: false });
+      btn.addEventListener('touchcancel', onEnd, { passive: false });
+      btn.addEventListener('mousedown', onStart);
+      btn.addEventListener('mouseup', onEnd);
+      btn.addEventListener('mouseleave', onEnd);
+    };
+
+    bindHold('#ast-touch-left', 'KeyA');
+    bindHold('#ast-touch-right', 'KeyD');
+    bindHold('#ast-touch-thrust', 'KeyW');
+
+    const fireBtn = touchControls.querySelector('#ast-touch-fire');
+    if (fireBtn) {
+      const onFire = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fireLaser();
+      };
+      fireBtn.addEventListener('touchstart', onFire, { passive: false });
+      fireBtn.addEventListener('mousedown', onFire);
+    }
+
+    const bombBtn = touchControls.querySelector('#ast-touch-bomb');
+    if (bombBtn) {
+      const onBomb = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fireBomb();
+      };
+      bombBtn.addEventListener('touchstart', onBomb, { passive: false });
+      bombBtn.addEventListener('mousedown', onBomb);
+    }
   }
 
   function fireLaser() {
@@ -365,6 +487,7 @@
     ctx = canvas.getContext('2d');
 
     createHUD();
+    createTouchControls();
 
     keydownHandler = (e) => {
       // Prevent navigation keys like 's' from escaping
@@ -430,6 +553,10 @@
     if (hud) {
       hud.remove();
       hud = null;
+    }
+    if (touchControls) {
+      touchControls.remove();
+      touchControls = null;
     }
     if (canvas) {
       canvas.remove();
