@@ -89,7 +89,6 @@ const {
 
       const TOY_CONFIGS: Record<string, { src: string; global: string }> = {
         asteroids: { src: '/toys/asteroids.js', global: '__asteroids' },
-        gravity: { src: '/toys/gravity.js', global: '__gravity' },
         katamari: { src: '/toys/katamari.js', global: '__katamari' },
         oneko: { src: '/toys/oneko.js', global: '__oneko' },
         crt: { src: '/toys/crt.js', global: '__crt' },
@@ -269,7 +268,7 @@ const {
         if (e.metaKey || e.ctrlKey || e.altKey) return;
 
         // If an interactive game or toy is active, DO NOT navigate away on 's' / 'h' / 'p'
-        if (activeToy && ['asteroids', 'gravity', 'katamari'].includes(activeToy)) return;
+        if (activeToy && ['asteroids', 'katamari'].includes(activeToy)) return;
 
         const key = e.key.toLowerCase();
         const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
