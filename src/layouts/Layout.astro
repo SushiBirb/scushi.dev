@@ -37,6 +37,62 @@ const {
     <meta property="og:url" content="https://scushi.dev" />
     <meta name="theme-color" content="#e3c28d" />
 
+    <!-- Structured data: machine-readable candidate profile (schema.org) -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      '@id': 'https://scushi.dev/#person',
+      name: 'Joshua Mattingly',
+      alternateName: 'scushi',
+      url: 'https://scushi.dev/',
+      description: 'Security-focused IT and systems engineer, CompTIA Security+ and A+ certified, CIS student at the University of Louisville, and operator of a production defense-in-depth home lab hosting this site.',
+      jobTitle: 'IT and Systems Security Engineer',
+      email: 'mailto:jmattingly@proitserv.com',
+      knowsAbout: [
+        'systems engineering',
+        'cybersecurity',
+        'network engineering',
+        'Rust',
+        'C++',
+        'Go',
+        'Python',
+        'Linux',
+        'reverse engineering',
+        'intrusion detection',
+        'Proxmox VE',
+        'WireGuard',
+        'Cloudflare edge networking'
+      ],
+      sameAs: [
+        'https://github.com/SushiBirb',
+        'https://linkedin.com/in/joshua-mattingly-39145721b'
+      ],
+      hasCredential: [
+        {
+          '@type': 'EducationalOccupationalCredential',
+          name: 'CompTIA Security+',
+          credentialStatus: 'Active',
+          url: 'https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1acb63ba1ea10c1c',
+          recognizedBy: { '@type': 'Organization', name: 'CompTIA' }
+        },
+        {
+          '@type': 'EducationalOccupationalCredential',
+          name: 'CompTIA A+',
+          credentialStatus: 'Active',
+          url: 'https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33',
+          recognizedBy: { '@type': 'Organization', name: 'CompTIA' }
+        }
+      ],
+      award: [
+        '1st Place State Champion, Enterprise Networking, FBLA',
+        '1st Place State Champion, Software Development, TSA'
+      ],
+      affiliation: {
+        '@type': 'CollegeOrUniversity',
+        name: 'University of Louisville'
+      }
+    })} />
+
     <ClientRouter />
   </head>
   <body class="min-h-screen bg-[var(--color-canvas)] text-neutral-200 font-mono antialiased selection:bg-accent selection:text-neutral-950 relative overflow-x-hidden">

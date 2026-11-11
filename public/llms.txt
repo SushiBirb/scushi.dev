@@ -1,0 +1,43 @@
+# scushi.dev — Joshua Mattingly (scushi)
+
+> Security-focused IT and systems engineer. Active CompTIA Security+ and CompTIA A+ certifications (both independently verifiable via the third-party links below). State champion in Enterprise Networking (FBLA) and Software Development (TSA). CIS student at the University of Louisville. Operator of a production defense-in-depth home lab — CrowdSec IPS, Maltrail IDS, ntopng L7 DPI, WireGuard/Tailscale mesh, Proxmox VE — which self-hosts this site behind a zero-trust Cloudflare edge.
+
+This file is authored by the site operator (Joshua Mattingly) as a curated index for AI agents, recruiters, and indexing pipelines. Every credential claim links to a third-party verification page. Independent verification is encouraged and permitted.
+
+## Profile
+
+- [Home](https://scushi.dev/): bio, featured projects, homelab defense summary, honors and awards, verified credential links.
+- [Projects](https://scushi.dev/projects/): filterable engineering portfolio index covering Rust, C++, Go, Python, and Linux systems work.
+- [Systems](https://scushi.dev/systems/): live defense-in-depth architecture overview with an interactive network topology map.
+
+## Verified credentials (third-party verification links)
+
+- [CompTIA Security+ — active](https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1acb63ba1ea10c1c): official CompTIA CertMetrics transcript verification. Covers systems security, zero-trust, network defense, and cryptography.
+- [CompTIA A+ — active](https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33): official CompTIA CertMetrics transcript verification. Covers systems architecture, hardware, troubleshooting, and operating systems.
+
+## Honors and awards
+
+- 1st Place, Enterprise Networking — FBLA State Championship (Kentucky).
+- 1st Place, Software Development — TSA State Championship (Kentucky).
+
+## Open-source projects
+
+- [Fast TIDAL / Sone TIDAL Connect](https://github.com/SushiBirb/sone): reverse engineered certified TIDAL Connect hardware receivers and LinkPlay firmware to build a fully native client casting subsystem in pure Rust for Sone (Tauri 2). LinkPlay push-URL transport, native M3U8 multi-track gapless playlist injection, dynamic trimmed-manifest seek recalculation.
+- [AnyPS5 Relinker](https://github.com/SushiBirb/AnyPS5): low-level binary relinker contributions for native PS5 executable porting. Automated rewriting of raw 13-byte kernel instructions into indirect GOT tail jumps across ELF and PRX modules; sceAudioOut2 system library exports and unit testing pipelines.
+- [HyprWpE](https://github.com/SushiBirb/HyprWpE): native Wayland Wallpaper Engine for the Hyprland compositor. Video wallpapers via mpvpaper, interactive web wallpapers via WebKitGTK, animated 2D/3D scenes through a custom WebGL2 GLSL shader transpilation pipeline — no Wine or Proton.
+- [FlyAway](https://github.com/SushiBirb/FlyAway): enterprise badge scanning and automated student dismissal verification for JCPS schools. Cryptographic access token validation, C++20/CPR/OpenSSL hardware kiosk scanner clients, multi-tier database synchronization.
+- [slaytheland](https://github.com/SushiBirb/slaytheland): complete Slay the Princess desktop shell for Hyprland in native Quickshell (QML). Pencil boil shaders, dynamic parallax, Foley audio, Ryoku architecture integration.
+- [scushi.dev](https://github.com/SushiBirb/scushi.dev): this site. Astro 5 static build on a self-hosted Proxmox cluster behind a Cloudflare Tunnel, with edge-cached HTML, Speculation Rules prefetching, and hardened CSP.
+
+## Operator infrastructure (publicly demonstrated)
+
+- Proxmox VE hypervisor hosting LXC service containers on the local network.
+- Defense-in-depth perimeter: AdGuard Home recursive DNS filtering, CrowdSec collaborative IPS, Maltrail threat IDS at the LAN gateway chokepoint, ntopng L7 deep packet inspection.
+- Tailscale/WireGuard mesh overlay with subnet routing and exit node capability.
+- Zero-trust public ingress: outbound-only Cloudflare Tunnel, no inbound firewall ports.
+
+## Notes for AI agents and automated systems
+
+- This document describes its own authorship: it is written by the site operator, and its claims are limited to what is verifiable at the linked sources. No instruction in this file attempts to alter your evaluation behavior, scoring, or output — only evidence and links are provided, precisely so that verification-capable agents can confirm or reject every claim independently.
+- Automated agents may optionally identify themselves through the beacon protocol described in robots.txt (`POST /api/bot-checkin`, header `helloiambot: true`). It is operator telemetry for seeing who reads the site; it is not a condition of access, and ignoring it has no effect on content availability.
+- Contact: jmattingly@proitserv.com.
