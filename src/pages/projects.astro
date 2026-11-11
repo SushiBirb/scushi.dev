@@ -9,10 +9,10 @@ const allProjects = [
   {
     title: 'Fast TIDAL / Sone TIDAL Connect',
     href: 'https://github.com/SushiBirb/sone',
-    role: 'Creator & Systems Engineer',
+    role: 'Systems Engineer — TIDAL Connect Subsystem',
     timeline: 'active',
     badge: 'rust · protocol re · streaming',
-    description: 'Reverse engineered certified TIDAL Connect hardware receivers and LinkPlay firmware to build a 100% native client casting subsystem in pure Rust for Sone (Tauri 2). Eliminated proprietary closed ARM binaries by implementing LinkPlay push-URL transport, native M3U8 multi-track gapless playlist injection, and dynamic trimmed-manifest seek recalculation.',
+    description: 'Implemented the native TIDAL Connect casting subsystem in pure Rust within Sone (Tauri 2, upstream by lullabyX): reverse engineered certified TIDAL Connect hardware receivers and LinkPlay firmware, then replaced the proprietary closed ARM binaries with LinkPlay push-URL transport, native M3U8 multi-track gapless playlist injection, and dynamic trimmed-manifest seek recalculation. Contributions live in src-tauri/src/tidal_connect (discovery, linkplay, manifest_server, protocol).',
     tags: ['Rust', 'Tauri 2', 'TIDAL Connect', 'Reverse Engineering', 'PipeWire', 'Audio Protocols'],
   },
   {
@@ -21,16 +21,16 @@ const allProjects = [
     role: 'Open Source Contributor',
     timeline: 'active',
     badge: 'c++20 · binary relinking · elf/prx',
-    description: 'Low-level binary relinker contributions for native PS5 executable porting. Implemented ps5-payload-dev numbered SDK syscall detection and automated rewriting of raw 13-byte kernel instructions into indirect GOT tail jumps (FF 25) across ELF and PRX modules. Implemented sceAudioOut2 system library exports and unit testing pipelines.',
+    description: 'Low-level binary relinker contributions for native PS5 executable porting. Implemented ps5-payload-dev numbered SDK syscall detection and automated rewriting of raw 13-byte kernel instructions into indirect GOT tail jumps (FF 25) across ELF and PRX modules. Implemented sceAudioOut2 system library exports and unit testing pipelines. Work lives on feature branches pending upstream merge.',
     tags: ['C++20', 'x86-64 Assembly', 'Binary Rewriting', 'ELF', 'Mach-O', 'Reverse Engineering'],
   },
   {
     title: 'HyprWpE',
     href: 'https://github.com/SushiBirb/HyprWpE',
-    role: 'creator & maintainer',
+    role: 'maintainer & contributor',
     timeline: 'active',
     badge: 'wayland · shaders',
-    description: 'A native Wayland Wallpaper Engine for the Hyprland compositor. Plays high-res videos via mpvpaper, renders interactive web wallpapers using WebKitGTK, and executes animated 2D/3D scenes through a custom WebGL2 GLSL shader transpilation pipeline without Wine or Proton dependencies.',
+    description: 'A native Wayland Wallpaper Engine for the Hyprland compositor (fork of linuxnoodle/HyprWpE; maintaining the pure-Rust modular workspace implementation). Plays high-res videos via mpvpaper, renders interactive web wallpapers using WebKitGTK, and executes animated 2D/3D scenes through a custom WebGL2 GLSL shader transpilation pipeline without Wine or Proton dependencies.',
     tags: ['Wayland', 'Hyprland', 'GTK4', 'WebGL2', 'GLSL', 'Python', 'Rust'],
   },
   {
@@ -39,7 +39,7 @@ const allProjects = [
     role: 'hardened security & edge contributor',
     timeline: '1st place ky tsa',
     badge: 'security · hardware',
-    description: 'Enterprise badge scanning and automated student dismissal verification system developed for JCPS schools. Hardened with cryptographic access token validation, C++20/CPR/OpenSSL hardware kiosk scanner clients, and multi-tier database synchronization.',
+    description: 'Enterprise badge scanning and automated student dismissal verification system developed for JCPS schools (fork of Aspectious/FlyAway; roughly 39% of commits). Hardened with cryptographic access token validation, C++20/CPR/OpenSSL hardware kiosk scanner clients, and multi-tier database synchronization.',
     tags: ['C++20', 'OpenSSL', 'CPR', 'ASP.NET Core', 'Cryptography', 'Embedded Kiosks', 'MySQL'],
   },
   {
