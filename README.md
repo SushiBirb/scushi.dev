@@ -50,6 +50,12 @@ Documented in `deploy/cloudflare-waf-rules.md`:
 - **Managed Challenge Rule:** Enforces Cloudflare Turnstile / CAPTCHA on requests with threat scores exceeding 10, unverified user-agents, or outdated HTTP versions.
 - **Rate Limiting:** Challenges hosts exceeding 60 requests within a 10-second window.
 
+### Cloudflare Edge Performance (2026-11-10)
+- **Speed Brain (Speculation Rules):** Enabled zone-wide. The edge injects `speculation-rules: /cdn-cgi/speculation`, and Chrome prefetches same-site links on hover (`conservative` eagerness), making `/projects` and `/systems` navigations near-instant.
+- **HTML Edge Caching:** Cache Rule `Edge Cache Static HTML and Pages` stores `/`, `/projects/`, and `/systems/` HTML at the edge for 2 hours (Edge TTL override), eliminating the Cloudflare Tunnel round-trip for HTML documents. `robots.txt`, `/api/*`, `/_matrix/*`, and monitoring subdomains remain uncached.
+- **Deploy Purge Integration:** `deploy/deploy.sh` purges the three cached HTML URLs via the Cloudflare API after each release so deploys are visible immediately.
+- **Immutable Asset Caching:** Hashed `/_astro/*` assets ship `Cache-Control: public, max-age=31536000, immutable` and are served from edge cache hits (never purged; filenames change with content).
+
 ### Infrastructure Obfuscation
 All private network references (internal subnets, gateway IPs, container identifiers) are abstracted into logical architectural tiers to ensure zero internal reconnaissance surface.
 

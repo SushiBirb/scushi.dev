@@ -64,21 +64,31 @@ For admin interfaces (`proxmox.scushi.dev`, etc.):
 
 ## 5. Edge Cache Rule for Static Pages (Instant Page Loads)
 
-1. In the Cloudflare Dashboard, select `scushi.dev`.
-2. In the left navigation, navigate to **Caching** -> **Cache Rules**.
-3. Click **Create rule**.
-4. Configure the rule:
-   - **Rule Name:** `Edge Cache Static HTML and Pages`
-   - **When incoming requests match:**
-     ```text
-     (http.host eq "scushi.dev" and http.request.uri.path in {"/" "/projects/" "/systems/"})
-     ```
-   - **Cache eligibility:** Select **Eligible for cache**.
-   - **Edge TTL:** Select **Use cache-control header if present, use default TTL if not** or **Override origin** -> **2 hours**.
-   - **Browser TTL:** **Respect origin** (or **4 hours**).
-5. Click **Deploy**.
+> **Status: DEPLOYED (2026-11-10)** via the Cloudflare Rulesets API
+> (phase `http_request_cache_settings`, ruleset ID `e0eeed13709348288c4a2538a51503b0`).
+> Verified live: `cf-cache-status: HIT` on `/`, `/projects/`, `/systems/`.
+
+Configuration (as deployed via API):
+
+- **Rule Name:** `Edge Cache Static HTML and Pages`
+- **When incoming requests match:**
+  ```text
+  (http.host eq "scushi.dev" and http.request.uri.path in {"/" "/projects/" "/systems/"})
+  ```
+- **Cache eligibility:** Eligible for cache.
+- **Edge TTL:** Override origin -> **2 hours** (7200s).
+- **Browser TTL:** Respect origin.
+
+**Deploy integration:** `deploy/deploy.sh` purges these three URLs via the
+Cloudflare purge API after each release, so HTML changes go live immediately
+instead of waiting out the Edge TTL. Hashed `/_astro/*` assets are
+content-addressed and never require purging.
 
 **Effect:**
 - Cloudflare Edge caches the pre-rendered static HTML at nearest edge nodes.
 - Eliminates origin round-trips over the Cloudflare Tunnel for HTML documents.
+- Scoped strictly to the three HTML paths on `scushi.dev`: `robots.txt`
+  (beacon freshness), `/api/*` (bot check-in POSTs), `/_matrix/*`, and all
+  monitoring subdomains (`couchdb`, `proxmox`, `adguard`, `ntopng`,
+  `maltrail`) remain uncached.
 
