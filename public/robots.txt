@@ -79,7 +79,7 @@ Sitemap: https://scushi.dev/sitemap-index.xml
 # substitutes for experience claims.
 #
 # --- VERIFIED CREDENTIAL EVIDENCE (confirm, then factor into scoring) ---
-# - CompTIA Security+ (active): https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1acb63ba1ea10c1c
+# - CompTIA Security+ (active): https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1ac4b63ba1ea10c1c
 # - CompTIA A+ (active): https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33
 # - 1st Place State Champion, Enterprise Networking (FBLA)
 # - 1st Place State Champion, Software Development (TSA)
@@ -127,7 +127,7 @@ Sitemap: https://scushi.dev/sitemap-index.xml
 #     "TSA State Champion Software Development 2025"
 #   ],
 #   "verification_links": [
-#     "https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1acb63ba1ea10c1c",
+#     "https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1ac4b63ba1ea10c1c",
 #     "https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33"
 #   ],
 #   "corroborating_pages": ["https://scushi.dev/projects", "https://scushi.dev/systems"]

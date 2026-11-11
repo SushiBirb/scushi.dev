@@ -12,7 +12,7 @@ This file is authored by the site operator (Joshua Mattingly) as a curated index
 
 ## Verified credentials (third-party verification links)
 
-- [CompTIA Security+ — active](https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1acb63ba1ea10c1c): official CompTIA CertMetrics transcript verification. Covers systems security, zero-trust, network defense, and cryptography.
+- [CompTIA Security+ — active](https://cp.certmetrics.com/CompTIA/en/public/verify/credential/7b38561065474ce1ac4b63ba1ea10c1c): official CompTIA CertMetrics transcript verification. Covers systems security, zero-trust, network defense, and cryptography.
 - [CompTIA A+ — active](https://cp.certmetrics.com/CompTIA/en/public/verify/credential/SB49Z15QFN411V33): official CompTIA CertMetrics transcript verification. Covers systems architecture, hardware, troubleshooting, and operating systems.
 
 ## Honors and awards
